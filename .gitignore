@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.env
+.env.local
+jwtRS256.key
+jwtRS256.key.pub
+.DS_Store
