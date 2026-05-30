@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { UserRole } from '../models/User';
+import { StatusCodes } from 'http-status-codes';
 import fs from 'fs';
 import path from 'path';
 
@@ -24,14 +25,14 @@ export const checkAndVerifyJWT = (req: Request, res: Response, next: NextFunctio
 
   // 1. header presente?
   if (!rawToken) {
-    res.status(401).json({ error: 'Auth token not available in the header' });
+    res.status(StatusCodes.UNAUTHORIZED).json({ error: 'Auth token not available in the header' });
     return;
   }
 
   // 2. formato corretto?
   const splittedRawToken = rawToken.split(' ');
   if (splittedRawToken.length !== 2 || splittedRawToken[0] !== 'Bearer') {
-    res.status(401).json({ error: 'Auth token is not in the correct format' });
+    res.status(StatusCodes.UNAUTHORIZED).json({ error: 'Auth token is not in the correct format' });
     return;
   }
 
@@ -48,7 +49,7 @@ export const checkAndVerifyJWT = (req: Request, res: Response, next: NextFunctio
     (req as AuthenticatedRequest).user = decoded; // ← salva il payload decodificato nella request
     next();
   } catch {
-    res.status(401).json({ error: 'Token non valido o scaduto' });
+    res.status(StatusCodes.UNAUTHORIZED).json({ error: 'Token non valido o scaduto' });
   }
 };
 

@@ -1,17 +1,18 @@
 import { Request, Response, NextFunction } from 'express';
 import * as userService from '../services/userServices';
+import * as Errors from '../middleware/errors/errorsClass';
+import { StatusCodes } from 'http-status-codes';
 
 export const login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      res.status(400).json({ error: 'Email e password obbligatori' });
-      return;
+      throw new Errors.BadRequestError('Email e password obbligatori');
     }
 
     const result = await userService.login(email, password);
-    res.json(result);
+    res.status(StatusCodes.OK).json(result);
   } catch (err) {
     next(err);
   }
@@ -28,12 +29,13 @@ export const register = async (req: Request, res: Response, next: NextFunction):
     const { email, password, role } = req.body;
 
     if (!email || !password) {
-      res.status(400).json({ error: 'Email e password obbligatori' });
-      return;
+      throw new Errors.BadRequestError('Email e password obbligatori');
     }
 
+    
+
     const result = await userService.register({ email, password, role });
-    res.status(201).json(result);
+    res.status(StatusCodes.CREATED).json(result);
   } catch (err) {
     next(err);
   }

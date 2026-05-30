@@ -6,6 +6,8 @@ import UserDAO from './dao/UserDAO';
 import NavigationPlanDAO from './dao/NavigationPlanDAO';
 import { PlanStatus } from './models/NavigationPlan';
 import userRoutes from './routes/userRoutes';
+import { errorHandler } from './middleware/errors/errorHandler';
+import { StatusCodes } from 'http-status-codes';
 
 //import { User } from './models/index';
 /*import { errorHandler } from './middleware/errorHandler';
@@ -84,6 +86,17 @@ app.get('/provadbpiani', async (req, res) => {
         res.status(500).json({ error: (err as Error).message })
     }
 });
+
+
+// 3. rotta non trovata (catch-all)
+app.use((req, res) => {
+  res.status(StatusCodes.NOT_FOUND).json({
+    success: false,
+    error: `Rotta ${req.method} ${req.path} non trovata`,
+  });
+});
+
+app.use(errorHandler);
 
 
 const PORT = process.env.PORT || 3000;

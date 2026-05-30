@@ -7,6 +7,7 @@ import { UserRole } from '../models/User';
 import { TOKEN_BALANCE_DEFAULT } from '../models/User';
 import { signJWT } from '../middleware/JWTAuth';
 import { JwtPayload } from '../middleware/JWTAuth';
+import * as Errors from '../middleware/errors/errorsClass';
 
 /*
 const private_key = fs.readFileSync(
@@ -17,12 +18,12 @@ export const login = async (email: string, password: string) => {
     const user = await UserDAO.findByEmail(email);
 
     if (!user) {
-        throw { status: 401, message: 'Credenziali non valide' };
+        throw new Errors.UnauthorizedError('Credenziali non valide');
     }
 
     const isValid = await bcrypt.compare(password, user.passwordHash);
     if (!isValid) {
-        throw { status: 401, message: 'Credenziali non valide' };
+        throw new Errors.UnauthorizedError('Password errata');
     }
 
     /*const token = jwt.sign({
@@ -53,10 +54,12 @@ export const register = async (data: {
 }) => {
     const existing = await UserDAO.findByEmail(data.email);
     if (existing) {
-        throw { status: 409, message: 'Email già registrata' };
+        throw new Errors.ConflictError('Email già registrata');
     }
 
-    const passwordHash = await bcrypt.hash(data.password, 10);
+    const passwordTrimmed = data.password.trim();
+
+    const passwordHash = await bcrypt.hash(passwordTrimmed, 10);
 
     const user = await UserDAO.create({
         email: data.email,
