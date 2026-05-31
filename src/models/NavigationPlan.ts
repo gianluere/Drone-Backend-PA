@@ -56,6 +56,7 @@ NavigationPlan.init(
         vesselCode: {
             type: DataTypes.STRING(10),
             allowNull: false,
+            unique: true,
             validate: {
                 len: [10, 10],
                 isAlphanumeric: true,

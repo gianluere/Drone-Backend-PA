@@ -2,7 +2,7 @@ import { DataTypes, Model, Optional } from 'sequelize';
 import SequelizeSingleton from '../config/database';
 
 export type UserRole = 'user' | 'operator' | 'admin';
-export const TOKEN_BALANCE_DEFAULT = 30;
+export const TOKEN_BALANCE_DEFAULT : number = 30;
 
 interface UserAttributes {
     id: number;

@@ -43,10 +43,10 @@ export const checkAndVerifyJWT = (req: Request, res: Response, next: NextFunctio
       //process.env.JWT_PUBLIC_KEY!.replace(/\\n/g, '\n'),
       //public_key,
       process.env.JWT_PUBLIC_KEY!.replace(/\\n/g, '\n'),
-      { algorithms: ['RS256'] } // ← deve essere un array, non una stringa
+      { algorithms: ['RS256'] }
     ) as JwtPayload;
 
-    (req as AuthenticatedRequest).user = decoded; // ← salva il payload decodificato nella request
+    (req as AuthenticatedRequest).user = decoded; // salvo il payload decodificato nella request
     next();
   } catch {
     res.status(StatusCodes.UNAUTHORIZED).json({ error: 'Token non valido o scaduto' });

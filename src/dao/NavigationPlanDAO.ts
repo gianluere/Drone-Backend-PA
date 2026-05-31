@@ -1,6 +1,7 @@
-import { Op } from 'sequelize';
+import { Op, Transaction } from 'sequelize';
 import { NavigationPlan, Waypoint, User } from '../models/index';
 import { PlanStatus } from '../models/NavigationPlan';
+import {ListFilters} from '../services/planServices';
 
 class NavigationPlanDAO {
 
@@ -43,7 +44,7 @@ class NavigationPlanDAO {
 
         return NavigationPlan.findAll({
             where,
-            include: [{ model: Waypoint, as: 'waypoints' }],
+            include: [{ model: Waypoint, as: 'waypoints', order: [['sequenceOrder', 'ASC']] }],
             order: [['createdAt', 'DESC']],
         });
     }
@@ -64,8 +65,8 @@ class NavigationPlanDAO {
         vesselCode: string;
         startDatetime: Date;
         endDatetime: Date;
-    }) {
-        return NavigationPlan.create(data);
+    }, transaction?: Transaction) {
+        return NavigationPlan.create(data, { transaction });
     }
 
     async updateStatus(id: number, data: {

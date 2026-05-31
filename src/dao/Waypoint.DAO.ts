@@ -1,3 +1,4 @@
+import { Transaction } from 'sequelize';
 import { Waypoint } from '../models/index';
 
 class WaypointDAO {
@@ -13,8 +14,8 @@ class WaypointDAO {
         sequenceOrder: number;
         latitude: number;
         longitude: number;
-    }[]) {
-        return Waypoint.bulkCreate(waypoints);
+    }[], transaction?: Transaction) {
+        return Waypoint.bulkCreate(waypoints, { transaction });
     }
 
     async deleteByPlanId(planId: number) {

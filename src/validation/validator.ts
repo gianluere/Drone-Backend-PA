@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { PlanStatus } from '../models/NavigationPlan';
 
 const passwordSchema = z
   .string({ error: 'Password obbligatoria' })
@@ -20,5 +21,13 @@ export const registerSchema = z.object({
     .default('user'),
 });
 
+/*export const listPlansSchema = z.object({
+  status: z.enum(PlanStatus).optional(),
+  dateFrom: z.string().optional(),
+  dateTo: z.string().optional(),
+  format: z.enum(['json', 'pdf']).optional().default('json'),
+});*/
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
+//export type ListPlansInput = z.infer<typeof listPlansSchema>;
