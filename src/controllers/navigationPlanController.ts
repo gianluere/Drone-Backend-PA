@@ -76,7 +76,7 @@ export const deleteNavigationPlan = async (req: AuthenticatedRequest, res: Respo
       throw new Errors.BadRequestError('ID del piano non valido');
     }
 
-    await planService.deleteNavigationPlan(userId, planId);
+    await planService.deleteNavigationPlan(planId, userId);
     res.status(StatusCodes.GONE).send({ message: 'Piano di navigazione eliminato correttamente' });
   } catch (err) {
     next(err);

@@ -3,10 +3,11 @@ import NavigationPlanDAO from '../dao/NavigationPlanDAO';
 import { NavigationPlan } from '../models';
 import { Waypoint } from '../models';
 import { PlanStatus } from '../models/NavigationPlan';
-import PDFDocument from 'pdfkit';
+import PDFDocument, { x } from 'pdfkit';
 import * as Errors from '../middleware/errors/errorsClass';
 import SequelizeSingleton from '../config/database';
 import WaypointDAO from '../dao/Waypoint.DAO';
+import UserDAO from '../dao/UserDAO';
 
 export interface ListFilters {
   status?: string;
@@ -87,6 +88,12 @@ export const createNavigationPlan = async (userId: number, data: {
   waypoints: { latitude: number; longitude: number; sequenceOrder: number }[];
 }): Promise<NavigationPlan> => {
 
+  let user = await UserDAO.findById(userId);
+
+  if (user!.tokenBalance < 5) {
+    throw new Errors.ForbiddenError('Token insufficienti per creare un piano di navigazione. Ricarica il tuo account.');
+  }
+
   if (data.vesselCode.length !== 10) throw new Errors.BadRequestError('vesselCode deve essere lungo 10 caratteri');
 
 
@@ -158,25 +165,32 @@ export const createNavigationPlan = async (userId: number, data: {
       })), t
     );
 
-    await t.commit(); // tutto ok — salva le modifiche
+    await UserDAO.updateTokenBalance(userId, user!.tokenBalance - 5, t);
+
+    await t.commit();
     return newPlan;
 
   } catch (err) {
-    await t.rollback(); // qualcosa è andato storto — annulla tutto
+    await t.rollback();
     throw err;
   }
 }
 
 
-export const deleteNavigationPlan = async (userId: number, planId: number): Promise<void> => {
-  const plan = await NavigationPlan.findOne({ where: { id: planId, userId } });
+export const deleteNavigationPlan = async (planId: number, userId: number): Promise<void> => {
+  const plan = await NavigationPlanDAO.findById(planId);
   if (!plan) {
     throw new Errors.NotFoundError('Piano di navigazione non trovato');
+  }
+
+  if (plan.userId !== userId) {
+    throw new Errors.ForbiddenError('Non hai i permessi per cancellare questo piano di navigazione');
   }
 
   if (plan.status !== PlanStatus.PENDING) {
     throw new Errors.BadRequestError('Solo i piani in stato PENDING possono essere cancellati');
   }
 
-  await plan.destroy();
+  await NavigationPlanDAO.deleteById(planId);
+  //await plan.destroy();
 }

@@ -1,3 +1,4 @@
+import { Transaction } from 'sequelize';
 import { User } from '../models/index';
 import { UserRole } from '../models/User';
 
@@ -23,8 +24,8 @@ class UserDAO {
         return User.create(data);
     }
 
-    async updateTokenBalance(id: number, tokenBalance: number) {
-        return User.update({ tokenBalance }, { where: { id } });
+    async updateTokenBalance(id: number, tokenBalance: number, transaction?: Transaction) {
+        return User.update({ tokenBalance }, { where: { id }, transaction });
     }
 
     async deleteById(id: number) {
