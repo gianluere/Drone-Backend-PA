@@ -1,7 +1,7 @@
 import { Op, Transaction } from 'sequelize';
 import { NavigationPlan, Waypoint, User } from '../models/index';
 import { PlanStatus } from '../models/NavigationPlan';
-import {ListFilters} from '../services/planServices';
+import {ListFilters} from '../services/navigationPlanServices';
 
 class NavigationPlanDAO {
 

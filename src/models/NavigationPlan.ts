@@ -36,6 +36,8 @@ class NavigationPlan
     declare startDatetime: Date;
     declare endDatetime: Date;
     declare status: PlanStatus;
+    declare rejectionReason?: string;  // motivazione del rigetto
+    declare reviewedBy?: number;       // id dell'operatore che ha valutato
     //declare tokenCost: number;
     declare readonly createdAt: Date;
     declare readonly updatedAt: Date;

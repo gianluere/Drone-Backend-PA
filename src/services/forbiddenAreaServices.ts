@@ -1,23 +1,15 @@
-import ForibiddenAreaDAO from "../dao/ForibiddenAreaDAO";
+import ForbiddenAreaDAO from "../dao/ForbiddenAreaDAO";
+import {CreateForbiddenAreaInput} from "../validation/validator";
 
 export class ForbiddenAreaService {
-    private forbiddenAreaDAO = ForibiddenAreaDAO;
 
     async getForbiddenAreas() {
         console.log('Fetching forbidden areas from service...');
-        return await this.forbiddenAreaDAO.findAll();
+        return await ForbiddenAreaDAO.findAll();
     }
 
-    async createForbiddenArea(data: {
-        name: string;
-        description?: string;
-        latMin: number;
-        lonMin: number;
-        latMax: number;
-        lonMax: number;
-        createdBy: number;
-    }) {
-        return await this.forbiddenAreaDAO.create(data);
+    async createForbiddenArea(data: CreateForbiddenAreaInput, operatorId : number) {
+        return await ForbiddenAreaDAO.create({...data, createdBy: operatorId});
     }
 
     

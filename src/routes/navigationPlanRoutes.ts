@@ -9,8 +9,8 @@ import { zodValidate } from '../middleware/zodValidator';
 const router = Router();
 
 router.get('/', checkAndVerifyJWT, checkRole('user'), navigationPlanController.listNavigationPlans);
-router.post('/create-plan', checkAndVerifyJWT, checkRole('user'), navigationPlanController.createNavigationPlan);
-router.delete('/delete-plan/:id', checkAndVerifyJWT, checkRole('user'), navigationPlanController.deleteNavigationPlan);
+router.post('/create-navigation-plan', checkAndVerifyJWT, checkRole('user'), navigationPlanController.createNavigationPlan);
+router.delete('/delete-navigation-plan/:id', checkAndVerifyJWT, checkRole('user'), navigationPlanController.deleteNavigationPlan);
 
 router.get('/:status', checkAndVerifyJWT, checkRole('operator'), navigationPlanController.listFilteredNavigationPlans);
 

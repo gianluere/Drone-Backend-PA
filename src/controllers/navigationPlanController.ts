@@ -1,11 +1,14 @@
 import { Request, Response, NextFunction } from 'express';
-import * as planService from '../services/planServices';
+//import * as planService from '../services/navigationPlanServices';
+import { NavigationPlanService } from '../services/navigationPlanServices';
 import { AuthenticatedRequest } from '../middleware/JWTAuth';
 import * as Errors from '../middleware/errors/errorsClass';
 import { PlanStatus } from '../models/NavigationPlan';
 import { StatusCodes } from 'http-status-codes';
-import { ca } from 'zod/locales';
 import { ReviewPlanInput } from '../validation/validator';
+
+
+const navigationPlanService = new NavigationPlanService();
 
 export const listNavigationPlans = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -33,13 +36,13 @@ export const listNavigationPlans = async (req: AuthenticatedRequest, res: Respon
       
     }
 
-    const plans = await planService.listPlans({ status, dateFrom, dateTo }, userId);
+    const plans = await navigationPlanService.getPlans({ status, dateFrom, dateTo }, userId);
 
     if(format !== 'pdf' && format !== 'json'&& format !== undefined) {
       throw new Errors.BadRequestError('format non valido, valori ammessi: json, pdf');
     }
     if (format === 'pdf') {
-      const pdfBuffer = await planService.exportPdf(plans);
+      const pdfBuffer = await navigationPlanService.exportToPdf(plans);
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', 'attachment; filename="plans.pdf"');
       res.send(pdfBuffer);
@@ -60,7 +63,7 @@ export const listFilteredNavigationPlans = async (req: AuthenticatedRequest, res
     if (!Object.values(PlanStatus).includes(status as PlanStatus)) {
       throw new Errors.BadRequestError('status non valido');
     }
-    const plans = await planService.listPlans({status});
+    const plans = await navigationPlanService.getPlans({status});
     res.json(plans);
   }catch(err){
     next(err);
@@ -77,7 +80,7 @@ export const createNavigationPlan = async (req: AuthenticatedRequest, res: Respo
       throw new Errors.BadRequestError('Dati del piano di navigazione non validi');
     }
 
-    const newPlan = await planService.createNavigationPlan(userId, { vesselCode, startDateTime, endDateTime, waypoints });
+    const newPlan = await navigationPlanService.createNavigationPlan(userId, { vesselCode, startDateTime, endDateTime, waypoints });
     res.status(StatusCodes.CREATED).json(newPlan);
   } catch (err) {
     next(err);
@@ -93,7 +96,7 @@ export const deleteNavigationPlan = async (req: AuthenticatedRequest, res: Respo
       throw new Errors.BadRequestError('ID del piano non valido');
     }
 
-    await planService.deleteNavigationPlan(planId, userId);
+    await navigationPlanService.deleteNavigationPlan(planId, userId);
     res.status(StatusCodes.GONE).send({ message: 'Piano di navigazione eliminato correttamente' });
   } catch (err) {
     next(err);
@@ -109,7 +112,7 @@ export const reviewNavigationPlan = async (req: AuthenticatedRequest, res: Respo
 
     if (isNaN(planId)) throw new Errors.BadRequestError('ID piano non valido');
 
-    const plan = await planService.reviewNavigationPlan(planId, operatorId, { status, rejectionReason });
+    const plan = await navigationPlanService.reviewNavigationPlan(planId, operatorId, { status, rejectionReason });
     res.status(StatusCodes.OK).json(plan);
   } catch (err) {
     next(err);

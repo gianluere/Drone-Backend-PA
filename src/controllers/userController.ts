@@ -1,7 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
-import * as userService from '../services/userServices';
+import {UserService} from '../services/userServices';
 import * as Errors from '../middleware/errors/errorsClass';
 import { StatusCodes } from 'http-status-codes';
+
+const userService = new UserService();
 
 export const login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -30,9 +32,7 @@ export const register = async (req: Request, res: Response, next: NextFunction):
 
     if (!email || !password) {
       throw new Errors.BadRequestError('Email e password obbligatori');
-    }
-
-    
+    }    
 
     const result = await userService.register({ email, password, role });
     res.status(StatusCodes.CREATED).json(result);
