@@ -7,8 +7,10 @@ import NavigationPlanDAO from './dao/NavigationPlanDAO';
 import { PlanStatus } from './models/NavigationPlan';
 import userRoutes from './routes/userRoutes';
 import navigationPlanRoutes from './routes/navigationPlanRoutes';
+import foribiddenAreaRoutes from './routes/forbiddenAreaRoutes';
 import { errorHandler } from './middleware/errors/errorHandler';
 import { StatusCodes } from 'http-status-codes';
+
 
 //import { User } from './models/index';
 /*import { errorHandler } from './middleware/errorHandler';
@@ -39,6 +41,7 @@ app.get('/', (req, res) => {
 
 app.use('/api/users', userRoutes);
 app.use('/api/plans', navigationPlanRoutes);
+app.use('/api/forbidden-areas', foribiddenAreaRoutes);
 
 app.get('/provadb', async (req, res) => {
     try {

@@ -21,6 +21,14 @@ export const registerSchema = z.object({
     .default('user'),
 });
 
+export const reviewPlanSchema = z.object({
+  status: z.enum(['accepted', 'rejected']),
+  rejectionReason: z.string().min(1, 'La motivazione è obbligatoria').optional(),
+}).refine(
+  (data) => data.status !== 'rejected' || data.rejectionReason,
+  { message: 'La motivazione è obbligatoria quando si rigetta un piano', path: ['rejectionReason'] }
+);
+
 /*export const listPlansSchema = z.object({
   status: z.enum(PlanStatus).optional(),
   dateFrom: z.string().optional(),
@@ -30,4 +38,5 @@ export const registerSchema = z.object({
 
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
+export type ReviewPlanInput = z.infer<typeof reviewPlanSchema>;
 //export type ListPlansInput = z.infer<typeof listPlansSchema>;

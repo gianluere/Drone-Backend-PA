@@ -8,6 +8,7 @@ import * as Errors from '../middleware/errors/errorsClass';
 import SequelizeSingleton from '../config/database';
 import WaypointDAO from '../dao/Waypoint.DAO';
 import UserDAO from '../dao/UserDAO';
+import ca from 'zod/v4/locales/ca.js';
 
 export interface ListFilters {
   status?: string;
@@ -15,7 +16,7 @@ export interface ListFilters {
   dateTo?: string;
 }
 
-export const listPlans = async (userId: number, filters: ListFilters): Promise<NavigationPlan[]> => {
+export const listPlans = async (filters: ListFilters, userId?: number): Promise<NavigationPlan[]> => {
   // validazione stato
   let status: PlanStatus | undefined;
   if (filters.status) {
@@ -46,8 +47,10 @@ export const listPlans = async (userId: number, filters: ListFilters): Promise<N
     console.log('Non può essere');
     throw new Errors.BadRequestError('dateFrom non può essere successiva a dateTo');
   }
-
-  return NavigationPlanDAO.findAllByUser(userId, { status, dateFrom, dateTo });
+  if (userId) {
+    return NavigationPlanDAO.findAllByUser(userId, { status, dateFrom, dateTo });
+  }
+  return NavigationPlanDAO.findAllByStatus(status);
 };
 
 export const exportPdf = (plans: NavigationPlan[]): Promise<Buffer> => {
@@ -122,32 +125,35 @@ export const createNavigationPlan = async (userId: number, data: {
     }
   }
 
-  /*
-  const newPlan = await NavigationPlanDAO.create({
-    userId,
-    vesselCode: data.vesselCode,
-    startDatetime: startDateTime,
-    endDatetime: endDateTime
-  });
+  
+  /*try {
+    return await SequelizeSingleton.getInstance().transaction(async (t) => {
+      const newPlan = await NavigationPlanDAO.create({
+        userId,
+        vesselCode: data.vesselCode,
+        startDatetime: startDateTime,
+        endDatetime: endDateTime,
+      }, t);
 
-  // Creazione dei waypoint associati al piano
-  for (const wp of data.waypoints) {
-    await Waypoint.create({
-      planId: newPlan.id,
-      latitude: wp.latitude,
-      longitude: wp.longitude,
-      sequenceOrder: wp.sequenceOrder,
+      await WaypointDAO.bulkCreate(
+        data.waypoints.map(wp => ({
+          planId: newPlan.id,
+          latitude: wp.latitude,
+          longitude: wp.longitude,
+          sequenceOrder: wp.sequenceOrder,
+        })), t
+      );
+
+      await UserDAO.updateTokenBalance(userId, user!.tokenBalance - 5, t);
+
+      return newPlan;
     });
-  }
-
-  return newPlan;*/
+  } catch (err) {
+    throw err; 
+  }*/
 
   const t = await SequelizeSingleton.getInstance().transaction();
-
-  //let trans = await SequelizeSingleton.getInstance().transaction(async (t) => {
-
-  //})
-
+  
   try {
     const newPlan = await NavigationPlanDAO.create({
       userId,
@@ -169,6 +175,7 @@ export const createNavigationPlan = async (userId: number, data: {
 
     await t.commit();
     return newPlan;
+    
 
   } catch (err) {
     await t.rollback();
@@ -190,7 +197,39 @@ export const deleteNavigationPlan = async (planId: number, userId: number): Prom
   if (plan.status !== PlanStatus.PENDING) {
     throw new Errors.BadRequestError('Solo i piani in stato PENDING possono essere cancellati');
   }
+  await SequelizeSingleton.getInstance().transaction(async (t) => {
+    await NavigationPlanDAO.deleteById(planId);
+    const user = await UserDAO.findById(userId);
+    await UserDAO.updateTokenBalance(userId, user!.tokenBalance + 5, t);
 
-  await NavigationPlanDAO.deleteById(planId);
+  });
+
   //await plan.destroy();
 }
+
+
+export const reviewNavigationPlan = async (planId: number, operatorId: number, data: {
+  status: 'accepted' | 'rejected';
+  rejectionReason?: string;
+}): Promise<NavigationPlan> => {
+
+  const plan = await NavigationPlanDAO.findById(planId);
+  if (!plan) throw new Errors.NotFoundError('Piano non trovato');
+
+  if (plan.status !== PlanStatus.PENDING) {
+    throw new Errors.BadRequestError('Solo i piani in stato pending possono essere valutati');
+  }
+
+  if (data.status === 'rejected' && !data.rejectionReason) {
+    throw new Errors.BadRequestError('La motivazione è obbligatoria quando si rigetta un piano');
+  }
+
+  await NavigationPlanDAO.updateStatus(planId, {
+    status: data.status === 'accepted' ? PlanStatus.ACCEPTED : PlanStatus.REJECTED,
+    rejectionReason: data.rejectionReason,
+    reviewedBy: operatorId,
+    reviewedAt: new Date(),
+  });
+
+  return NavigationPlanDAO.findById(planId) as Promise<NavigationPlan>;
+};
