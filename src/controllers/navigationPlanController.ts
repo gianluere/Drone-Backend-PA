@@ -97,7 +97,7 @@ export const deleteNavigationPlan = async (req: AuthenticatedRequest, res: Respo
     }
 
     await navigationPlanService.deleteNavigationPlan(planId, userId);
-    res.status(StatusCodes.GONE).send({ message: 'Piano di navigazione eliminato correttamente' });
+    res.status(StatusCodes.NO_CONTENT).send({ message: 'Piano di navigazione eliminato correttamente' });
   } catch (err) {
     next(err);
   }

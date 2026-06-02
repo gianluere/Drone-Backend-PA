@@ -1,6 +1,6 @@
 import { StatusCodes } from "http-status-codes";
 import { ForbiddenAreaService } from "../services/forbiddenAreaServices";
-import { CreateForbiddenAreaInput } from "../validation/validator";
+import { CreateForbiddenAreaInput, UpdateForbiddenAreaInput } from "../validation/validator";
 
 /*
 export class ForbiddenAreaController {
@@ -36,6 +36,31 @@ export const createForbiddenArea = async (req: any, res: any, next: any) => {
             req.user!.userId
         );
         res.status(StatusCodes.CREATED).json({ success: true, data: area });
+    } catch (err) {
+        next(err);
+    }
+}
+
+export const updateForbiddenArea = async (req: any, res: any, next: any) => {
+    try {
+        const areaId = parseInt(req.params.id);
+        const data = req.body as UpdateForbiddenAreaInput;
+        const area = await forbiddenAreaService.updateForbiddenArea(
+            areaId,
+            data,
+            req.user!.userId
+        );
+        res.status(StatusCodes.OK).json({ success: true, data: area });
+    } catch (err) {
+        next(err);
+    }
+}
+
+export const deleteForbiddenArea = async (req: any, res: any, next: any) => {
+    try {
+        const areaId = parseInt(req.params.id);
+        await forbiddenAreaService.deleteForbiddenArea(areaId, req.user!.userId);
+        res.status(StatusCodes.NO_CONTENT).send({ message: 'Forbidden area eliminata correttamente' });
     } catch (err) {
         next(err);
     }
