@@ -45,13 +45,14 @@ export class NavigationPlanService {
 
     // controllo coerenza date
     if (dateFrom && dateTo && dateFrom > dateTo) {
-      console.log('Non può essere');
       throw new Errors.BadRequestError('dateFrom non può essere successiva a dateTo');
     }
     if (userId) {
       return NavigationPlanDAO.findAllByUser(userId, { status, dateFrom, dateTo });
     }
-    return NavigationPlanDAO.findAllByStatus(status);
+
+    const plans = await NavigationPlanDAO.findAllByStatus(status);
+    return plans;
   }
 
   exportToPdf(plans: NavigationPlan[]): Promise<Buffer> {
@@ -103,13 +104,14 @@ export class NavigationPlanService {
     }
 
     if (data.vesselCode.length !== 10) throw new Errors.BadRequestError('vesselCode deve essere lungo 10 caratteri');
+    
+    if (isNaN(data.startDateTime.getTime())) throw new Errors.BadRequestError('startDateTime non valida');
+    
+    if (isNaN(data.endDateTime.getTime())) throw new Errors.BadRequestError('endDateTime non valida');
 
-
-    const startDateTime = new Date(data.startDateTime);
-    if (isNaN(startDateTime.getTime())) throw new Errors.BadRequestError('startDateTime non valida');
-
-    const endDateTime = new Date(data.endDateTime);
-    if (isNaN(endDateTime.getTime())) throw new Errors.BadRequestError('endDateTime non valida');
+    if (data.endDateTime.getTime() <= data.startDateTime.getTime()) {
+      throw new Errors.BadRequestError('endDateTime deve essere successiva a startDateTime');
+    }
 
     if (data.waypoints.length < 3) {
       throw new Errors.BadRequestError('waypoints deve contenere almeno 3 elementi');
@@ -163,8 +165,8 @@ export class NavigationPlanService {
       const newPlan = await NavigationPlanDAO.create({
         userId,
         vesselCode: data.vesselCode,
-        startDatetime: startDateTime,
-        endDatetime: endDateTime,
+        startDatetime: data.startDateTime,
+        endDatetime: data.endDateTime,
       }, t);
 
       await WaypointDAO.bulkCreate(

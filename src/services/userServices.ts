@@ -74,6 +74,22 @@ export class UserService {
 
     }
 
+    async chargeTokens(userId: number, amount: number) {
+        const user = await UserDAO.findById(userId);
+        if (!user) {
+            throw new Errors.NotFoundError('Utente non trovato');
+        }
+
+        if(user.role !== 'user') {
+            throw new Errors.BadRequestError('Solo gli utenti di tipo "user" possono avere un saldo di token');
+        }
+
+        const newBalance = user.tokenBalance + amount;
+        await UserDAO.updateTokenBalance(userId, newBalance);
+
+        return { tokenBalance: newBalance };
+    }
+
 }
 
 /*

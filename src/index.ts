@@ -1,99 +1,40 @@
+/**
+ * @fileoverview Punto di ingresso dell'applicazione Express. Configura il server, le rotte e la connessione al database.
+ * Carica le variabili d'ambiente, imposta i middleware e avvia il server sulla porta specificata.
+ * Gestisce anche la chiusura pulita del pool di connessione al database quando il processo termina.
+ * 
+ */
+
 import express from 'express';
 import dotenv from 'dotenv';
 import SequelizeSingleton from './config/database';
-//import {User, NavigationPlan, Waypoint, ForbiddenArea} from  './models/index';
-import UserDAO from './dao/UserDAO';
-import NavigationPlanDAO from './dao/NavigationPlanDAO';
-import { PlanStatus } from './models/NavigationPlan';
 import userRoutes from './routes/userRoutes';
 import navigationPlanRoutes from './routes/navigationPlanRoutes';
 import foribiddenAreaRoutes from './routes/forbiddenAreaRoutes';
 import { errorHandler } from './middleware/errors/errorHandler';
 import { StatusCodes } from 'http-status-codes';
 
-
-//import { User } from './models/index';
-/*import { errorHandler } from './middleware/errorHandler';
-import authRoutes from './routes/auth.routes';
-import planRoutes from './routes/plan.routes';
-import areaRoutes from './routes/area.routes';
-import userRoutes from './routes/user.routes';
-*/
-
+// Carica le variabili d'ambiente da .env
 dotenv.config();
 
-
+// Crea l'app Express
 const app = express();
 app.use(express.json());
-
-/*
-app.use('/api/auth', authRoutes);
-app.use('/api/areas', areaRoutes);
-app.use('/api/plans', planRoutes);
-app.use('/api/users', userRoutes);
-
-app.use(errorHandler);
-*/
 
 app.get('/', (req, res) => {
     res.json({ message: "Drone-backend attivo" });
 });
 
-app.use('/api/users', userRoutes);
-app.use('/api/plans', navigationPlanRoutes);
-app.use('/api/forbidden-areas', foribiddenAreaRoutes);
-
-app.get('/provadb', async (req, res) => {
-    try {
-        const sequelize = SequelizeSingleton.getInstance();
-        //await sequelize.sync()
-        
-        //let out = await User;//hasMany(NavigationPlan);
-
-        /*const user = await User.findByPk(6, {
-            include: [{ model: NavigationPlan, as: 'navigationPlans' }],
-        });
-        const plans = user?.get('navigationPlans') as NavigationPlan[];
-
-        res.json(plans);
-        */
-
-        const user = await UserDAO.findById(6);
-        res.json(user);
-
-    } catch (err) {
-        console.error('Errore di connessione al database:', err);
-        res.status(500).json({ error: (err as Error).message })
-    }
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'ok' });
 });
 
-
-app.get('/provadbpiani', async (req, res) => {
-    try {
-        
-        //await sequelize.sync()
-        
-        //let out = await User;//hasMany(NavigationPlan);
-
-        /*const user = await User.findByPk(6, {
-            include: [{ model: NavigationPlan, as: 'navigationPlans' }],
-        });
-        const plans = user?.get('navigationPlans') as NavigationPlan[];
-
-        res.json(plans);
-        */
-
-        const plans = await NavigationPlanDAO.findAllByStatus(PlanStatus.PENDING);
-       res.json(plans);
-
-    } catch (err) {
-        console.error('Errore di connessione al database:', err);
-        res.status(500).json({ error: (err as Error).message })
-    }
-});
+app.use('/api/users', userRoutes); // Rotte per autenticazione e gestione utenti
+app.use('/api/plans', navigationPlanRoutes); // Rotte per gestione piani di navigazione
+app.use('/api/forbidden-areas', foribiddenAreaRoutes); // Rotte per gestione aree vietate
 
 
-// 3. rotta non trovata (catch-all)
+// gestisce caso rotta non trovata
 app.use((req, res) => {
   res.status(StatusCodes.NOT_FOUND).json({
     success: false,
@@ -101,7 +42,7 @@ app.use((req, res) => {
   });
 });
 
-app.use(errorHandler);
+app.use(errorHandler); // Middleware di gestione errori
 
 
 const PORT = process.env.PORT || 3000;

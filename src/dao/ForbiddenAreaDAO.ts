@@ -4,7 +4,7 @@ class ForbiddenAreaDAO {
     async findAll() {
         return ForbiddenArea.findAll({
             include: [{ model: User, as: 'creator', attributes: ['id', 'email'] }],
-            order: [['createdAt', 'DESC']],
+            order: [['id', 'ASC']],
         });
     }
 
