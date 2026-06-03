@@ -1,24 +1,7 @@
+/**
+ * @fileoverview File per la definizione degli schemi di validazione per i piani di navigazione tramite Zod
+ */
 import { z } from 'zod';
-
-const passwordSchema = z
-  .string({ error: 'Password obbligatoria' })
-  .min(8, 'La password deve essere di almeno 8 caratteri')
-  .regex(/[0-9]/, 'La password deve contenere almeno un numero')
-  .regex(/[!@#$%^&*()_+\-=\[\]{};\':"\\|,.<>\/?]/, 'La password deve contenere almeno un carattere speciale');
-
-export const loginSchema = z.object({
-  email: z.email({ error: 'Email non valida' }).min(1, 'Email obbligatoria'),
-  password: z.string({ error: 'Password obbligatoria' }).min(1, 'Password obbligatoria'),
-});
-
-export const registerSchema = z.object({
-  email: z.email({ error: 'Email non valida' }),
-  password: passwordSchema,
-  role: z
-    .enum(['user', 'operator', 'admin'])
-    .optional()
-    .default('user'),
-});
 
 const latitudeSchema = z.number({ error: 'Latitudine deve essere un numero' })
   .min(-90, 'Latitudine deve essere compresa tra -90 e 90')
@@ -111,63 +94,5 @@ export const reviewNavigationPlanSchema = z.object({
   { message: 'La motivazione è obbligatoria quando si rigetta un piano', path: ['rejectionReason'] }
 );
 
-
-
-export const createForbiddenAreaSchema = z.object({
-  name: z.string({ error: 'Nome obbligatorio' }).min(1, 'Nome obbligatorio'),
-  description: z.string().optional(),
-  latMin: latitudeSchema,
-  lonMin: longitudeSchema,
-  latMax: latitudeSchema,
-  lonMax: longitudeSchema,
-}).refine(
-  (data) => data.latMin < data.latMax,
-  { message: 'latMin deve essere minore di latMax', path: ['latMin'] }
-).refine(
-  (data) => data.lonMin < data.lonMax,
-  { message: 'lonMin deve essere minore di lonMax', path: ['lonMin'] }
-);
-
-
-export const updateForbiddenAreaSchema = z.object({
-  name: z.string().min(1, 'Nome non può essere vuoto').optional(),
-  description: z.string().optional(),
-  latMin: latitudeSchema.optional(),
-  lonMin: longitudeSchema.optional(),
-  latMax: latitudeSchema.optional(),
-  lonMax: longitudeSchema.optional()
-}).refine(
-  (data) => !data.latMin || !data.latMax || data.latMin < data.latMax,
-  { message: 'latMin deve essere minore di latMax', path: ['latMin'] }
-).refine(
-  (data) => !data.lonMin || !data.lonMax || data.lonMin < data.lonMax,
-  { message: 'lonMin deve essere minore di lonMax', path: ['lonMin'] }
-);
-
-
-
-export const chargeTokensSchema = z.object({
-  amount: z.number({ error: 'Amount deve essere un numero' })
-    .positive('Amount deve essere un numero positivo')
-    .int('Amount deve essere un numero intero'),
-  userId: z.number({ error: 'User ID deve essere un numero' })
-    .positive('User ID deve essere un numero positivo')
-    .int('User ID deve essere un numero intero')
-});
-
-/*export const listPlansSchema = z.object({
-  status: z.enum(PlanStatus).optional(),
-  dateFrom: z.string().optional(),
-  dateTo: z.string().optional(),
-  format: z.enum(['json', 'pdf']).optional().default('json'),
-});*/
-
-export type LoginInput = z.infer<typeof loginSchema>;
-export type RegisterInput = z.infer<typeof registerSchema>;
 export type CreateNavigationPlanInput = z.infer<typeof createNavigationPlanSchema>;
 export type ReviewNavigationPlanInput = z.infer<typeof reviewNavigationPlanSchema>;
-export type CreateForbiddenAreaInput = z.infer<typeof createForbiddenAreaSchema>;
-export type UpdateForbiddenAreaInput = z.infer<typeof updateForbiddenAreaSchema>;
-export type ChargeTokensInput = z.infer<typeof chargeTokensSchema>;
-
-//export type ListPlansInput = z.infer<typeof listPlansSchema>;

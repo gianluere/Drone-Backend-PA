@@ -1,7 +1,21 @@
-import { Op, WhereOptions } from 'sequelize';
+/**
+ * Navigation Plan Service
+ *
+ * Contiene la logica di business relativa ai piani di navigazione.
+ *
+ * Responsabilità principali:
+ * - gestione CRUD dei piani di navigazione
+ * - validazione dei filtri di ricerca
+ * - gestione transazioni (creazione piano + waypoint + token)
+ * - export dei piani in PDF
+ * - revisione (approvazione/rifiuto) dei piani
+ * - validazione regole di dominio (waypoint, date, stato, permessi)
+ *
+ * Il service utilizza DAO layer per l'accesso al database e
+ * Sequelize transaction per garantire consistenza dei dati.
+ */
 import NavigationPlanDAO from '../dao/NavigationPlanDAO';
 import { NavigationPlan } from '../models';
-import { Waypoint } from '../models';
 import { PlanStatus } from '../models/NavigationPlan';
 import PDFDocument, { x } from 'pdfkit';
 import * as Errors from '../middleware/errors/errorsClass';
@@ -17,7 +31,22 @@ export interface ListFilters {
 
 export class NavigationPlanService {
 
-  async getPlans(filters: ListFilters, userId?: number): Promise<NavigationPlan[]> {
+  /**
+   * Recupera i piani di navigazione applicando filtri opzionali.
+   *
+   * Filtri supportati:
+   * - status del piano (validato con enum PlanStatus)
+   * - intervallo temporale (dateFrom, dateTo)
+   *
+   * Se viene passato userId, restituisce solo i piani dell'utente.
+   *
+   * @param filters Filtri di ricerca.
+   * @param userId (opzionale) ID utente per cercare i piani dello user, se non indicato viene fatta un.
+   * @returns Lista dei piani di navigazione.
+   *
+   * @throws BadRequestError se i filtri non sono validi.
+   */
+  async getPlans(filters: ListFilters, userId?: number) {
     // validazione stato
     let status: PlanStatus | undefined;
     if (filters.status) {
@@ -191,7 +220,7 @@ export class NavigationPlanService {
 
   }
 
-  async deleteNavigationPlan(planId: number, userId: number): Promise<void> {
+  async deleteNavigationPlan(planId: number, userId: number) {
 
     const plan = await NavigationPlanDAO.findById(planId);
     if (!plan) {
@@ -217,7 +246,7 @@ export class NavigationPlanService {
   async reviewNavigationPlan(planId: number, operatorId: number, data: {
     status: 'accepted' | 'rejected';
     rejectionReason?: string;
-  }): Promise<NavigationPlan> {
+  }) {
 
     const plan = await NavigationPlanDAO.findById(planId);
     if (!plan) throw new Errors.NotFoundError('Piano non trovato');
@@ -237,7 +266,11 @@ export class NavigationPlanService {
       reviewedAt: new Date(),
     });
 
-    return NavigationPlanDAO.findById(planId) as Promise<NavigationPlan>;
+    const updated = await NavigationPlanDAO.findById(planId)
+
+    if (!updated) throw new Errors.NotFoundError('Piano non trovato dopo aggiornamento');
+    
+    return updated;
 
   }
 

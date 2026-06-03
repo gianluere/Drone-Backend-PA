@@ -8,7 +8,8 @@ import * as userController from '../controllers/userController';
 import { checkAndVerifyJWT } from '../middleware/JWTAuth';
 import { checkRole } from '../middleware/checkRole';
 import { zodValidate } from '../middleware/zodValidator';
-import { chargeTokensSchema, loginSchema, registerSchema } from '../validation/validator';
+import { chargeTokensSchema, loginSchema, registerSchema } from '../validation/userValidator';
+
 
 const router = Router();
 

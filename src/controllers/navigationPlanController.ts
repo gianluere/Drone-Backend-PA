@@ -1,11 +1,24 @@
+/**
+ * Navigation Plan Controller
+ *
+ * Gestisce gli endpoint relativi ai piani di navigazione:
+ * - elenco dei piani (con filtri e export PDF)
+ * - creazione di nuovi piani di navigazione
+ * - eliminazione dei piani
+ * - revisione (approvazione/rifiuto) dei piani
+ *
+ * Include anche la validazione delle forbidden areas:
+ * ogni waypoint viene verificato contro le aree vietate
+ * prima della creazione del piano.
+ */
+
 import { Request, Response, NextFunction } from 'express';
-//import * as planService from '../services/navigationPlanServices';
 import { NavigationPlanService } from '../services/navigationPlanServices';
 import { AuthenticatedRequest } from '../middleware/JWTAuth';
 import * as Errors from '../middleware/errors/errorsClass';
 import { PlanStatus } from '../models/NavigationPlan';
 import { StatusCodes } from 'http-status-codes';
-import { CreateNavigationPlanInput, ReviewNavigationPlanInput } from '../validation/validator';
+import { CreateNavigationPlanInput, ReviewNavigationPlanInput } from '../validation/navigationPlanValidator';
 import { ForbiddenAreaService } from '../services/forbiddenAreaServices';
 
 
@@ -24,6 +37,13 @@ type BoundingBox = {
   lonMax: number;
 };
 
+/**
+ * Verifica se un punto geografico è contenuto dentro un bounding box.
+ *
+ * @param point Punto da verificare.
+ * @param box Bounding box dell'area.
+ * @returns true se il punto è all'interno dell'area.
+ */
 const isPointInsideBox = (point: Point, box: BoundingBox): boolean => {
   return (
     point.latitude >= box.latMin &&
@@ -33,9 +53,23 @@ const isPointInsideBox = (point: Point, box: BoundingBox): boolean => {
   );
 };
 
+/**
+ * Restituisce la lista dei piani di navigazione dell'utente autenticato.
+ *
+ * Supporta filtri opzionali:
+ * - status del piano
+ * - intervallo temporale (dateFrom, dateTo)
+ * - formato di output (json o pdf)
+ *
+ * Se richiesto il formato PDF, viene generato e restituito come download.
+ *
+ * @param req Request autenticata con query filters.
+ * @param res Response HTTP.
+ * @param next Middleware error handling.
+ */
 export const listNavigationPlans = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const userId = req.user!.userId;
+    const userId = req.user!.role === 'user' ? req.user!.userId : undefined;
 
     const { status, dateFrom, dateTo, format } = req.query as {
       status?: string;
@@ -43,6 +77,9 @@ export const listNavigationPlans = async (req: AuthenticatedRequest, res: Respon
       dateTo?: string;
       format?: string;
     };
+
+    console.log("userId: ", userId);
+    console.log("Dati: ", status, dateFrom, dateTo, format);
 
     if (status) {
       if (!Object.values(PlanStatus).includes(status as PlanStatus)) {
@@ -78,7 +115,13 @@ export const listNavigationPlans = async (req: AuthenticatedRequest, res: Respon
   }
 };
 
-
+/**
+ * Restituisce i piani di navigazione filtrati per status.
+ *
+ * @param req Request con status nei params.
+ * @param res Response HTTP.
+ * @param next Middleware error handling.
+ *//*
 export const listFilteredNavigationPlans = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
 
   try {
@@ -91,9 +134,23 @@ export const listFilteredNavigationPlans = async (req: AuthenticatedRequest, res
   } catch (err) {
     next(err);
   }
-}
+}*/
 
 
+/**
+ * Crea un nuovo piano di navigazione.
+ *
+ * Prima della creazione vengono eseguiti i seguenti controlli:
+ * - validazione dei dati obbligatori
+ * - verifica che i waypoint non si trovino in forbidden areas
+ *
+ * Se anche un solo waypoint ricade in un'area vietata,
+ * la creazione viene bloccata e viene restituito un errore.
+ *
+ * @param req Request autenticata contenente il piano.
+ * @param res Response HTTP.
+ * @param next Middleware error handling.
+ */
 export const createNavigationPlan = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const userId = req.user!.userId;
@@ -130,6 +187,15 @@ export const createNavigationPlan = async (req: AuthenticatedRequest, res: Respo
   }
 };
 
+/**
+ * Elimina un piano di navigazione.
+ *
+ * L'operazione è consentita solo al creatore del piano.
+ *
+ * @param req Request contenente l'id del piano nei params.
+ * @param res Response HTTP.
+ * @param next Middleware error handling.
+ */
 export const deleteNavigationPlan = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const userId = req.user!.userId;
@@ -147,6 +213,15 @@ export const deleteNavigationPlan = async (req: AuthenticatedRequest, res: Respo
 }
 
 
+/**
+ * Permette ad un operatore di approvare o rifiutare un piano di navigazione.
+ *
+ * Se il piano viene rifiutato, può essere fornita una motivazione.
+ *
+ * @param req Request contenente id del piano e dati di review.
+ * @param res Response HTTP.
+ * @param next Middleware error handling.
+ */
 export const reviewNavigationPlan = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const planId = Number(req.params.id);

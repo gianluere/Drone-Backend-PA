@@ -6,9 +6,8 @@
 import { Router } from 'express';
 import { checkAndVerifyJWT } from '../middleware/JWTAuth';
 import { checkRole } from '../middleware/checkRole';
-//import { listPlansSchema } from '../validation/validator';
 import * as navigationPlanController from '../controllers/navigationPlanController';
-import { createNavigationPlanSchema, reviewNavigationPlanSchema } from '../validation/validator';
+import { createNavigationPlanSchema, reviewNavigationPlanSchema } from '../validation/navigationPlanValidator';
 import { zodValidate } from '../middleware/zodValidator';
 
 const router = Router();
@@ -21,7 +20,7 @@ const router = Router();
  * È possibile inviare query parameters per filtrare i piani di navigazione in base allo stato, alla data di inizio, alla data di fine e al tipo di formato.
  * Esempio di query parameters: /api/plans?status=accepted&dateFrom=2024-01-01&dateTo=2024-12-31&format=pdf
  */
-router.get('/', checkAndVerifyJWT, checkRole('user'), navigationPlanController.listNavigationPlans);
+router.get('/', checkAndVerifyJWT, checkRole('user', 'operator'), navigationPlanController.listNavigationPlans);
 
 /**
  * @route POST /api/plans/create-navigation-plan
@@ -46,7 +45,7 @@ router.delete('/delete-navigation-plan/:id', checkAndVerifyJWT, checkRole('user'
  * Richiede autenticazione JWT e verifica che l'utente abbia il ruolo di 'operator'.
  * Chiama il controller per ottenere la lista dei piani di navigazione filtrati.
  */
-router.get('/:status', checkAndVerifyJWT, checkRole('operator'), navigationPlanController.listFilteredNavigationPlans);
+//router.get('/', checkAndVerifyJWT, checkRole('operator'), navigationPlanController.listNavigationPlans);
 
 /**
  * @route PATCH /api/plans/:id/review

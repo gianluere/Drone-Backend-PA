@@ -1,9 +1,18 @@
-import { Request, Response, NextFunction } from 'express';
-import { ZodSchema } from 'zod';
-import { StatusCodes } from 'http-status-codes';
-//import { ListPlansInput } from '../validation/validator';
+/**
+ * @fileoverview Middlware per la validazione dei dati tramite Zod
+ */
 
-export const zodValidate = (schema: ZodSchema) =>
+import { Request, Response, NextFunction } from 'express';
+import { ZodType } from 'zod';
+import { StatusCodes } from 'http-status-codes';
+
+
+/**
+ * Funzione che effettua la validazione dei dati. Se a buon termine li converte e li aggiunge nel req.body
+ * @param schema Schema che si vuole utilizzare per fare la validazione dei dati
+ * @returns Risposta Http con errore se i dati inviati non rispettano lo schema altrimenti passa il controllo all'oggetto successivo
+ */
+export const zodValidate = (schema: ZodType) =>
     (req: Request, res: Response, next: NextFunction): void => {
         const result = schema.safeParse(req.body);
         console.log(result);
@@ -23,26 +32,3 @@ export const zodValidate = (schema: ZodSchema) =>
         req.body = result.data;
         next();
     };
-
-/*
-export const zodValidateQuery = (schema: ZodSchema) =>
-    (req: Request, res: Response, next: NextFunction): void => {
-        const result = schema.safeParse(req.query);
-        console.log(result);
-
-        if (!result.success) {
-
-            res.status(StatusCodes.BAD_REQUEST).json({
-                success: false,
-                errors: result.error.issues.map(e => ({
-                    field: e.path.join('.'),
-                    message: e.message,
-                })),
-            });
-            return;
-        }
-
-        req.query = result.data as ListPlansInput;
-        next();
-    }
-*/

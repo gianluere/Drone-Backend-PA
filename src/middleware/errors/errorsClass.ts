@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Classe con tutti i possibili errori utilizzati nel sistema.
+ * Tutte estendono AppError che mette a disposizione il numero per lo StatusCode e il messaggio da mostrare
+ */
+
 import { StatusCodes } from 'http-status-codes';
 
 export class AppError extends Error {

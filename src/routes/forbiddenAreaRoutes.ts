@@ -8,7 +8,7 @@ import * as forbiddenAreaController from '../controllers/forbiddenAreaController
 import { checkAndVerifyJWT } from '../middleware/JWTAuth';
 import { checkRole } from '../middleware/checkRole';
 import { zodValidate } from '../middleware/zodValidator';
-import { createForbiddenAreaSchema, updateForbiddenAreaSchema } from '../validation/validator';
+import { createForbiddenAreaSchema, updateForbiddenAreaSchema } from '../validation/forbiddenAreaValidator';
 
 
 const router = Router();

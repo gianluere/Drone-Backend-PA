@@ -1,7 +1,20 @@
+/**
+ * @fileoverview Middleware per gestire gli errori
+ */
+
 import { Request, Response, NextFunction } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import { AppError } from './errorsClass';
 
+
+/**
+ * Funzione per gestire gli errori.
+ * @param err Errore che viene generato dalle varie funzioni e rilevato tramite try/catch
+ * @param req 
+ * @param res Risposta http che viene inviata
+ * @param next 
+ * @returns Se l'errore appartienene alla AppError viene inviata una risposta basata su quell'oggetto, altrimenti una generica risposta d'errore
+ */
 export const errorHandler = (
   err: unknown,
   req: Request,

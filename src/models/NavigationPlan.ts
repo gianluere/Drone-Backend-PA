@@ -6,8 +6,7 @@ export const TOKEN_COST_PER_PLAN = 5;
 export enum PlanStatus {
     PENDING = 'pending',
     ACCEPTED = 'accepted',
-    REJECTED = 'rejected',
-    CANCELLED = 'cancelled',
+    REJECTED = 'rejected'
 }
 
 interface NavigationPlanAttributes {
@@ -17,9 +16,9 @@ interface NavigationPlanAttributes {
     startDatetime: Date;
     endDatetime: Date;
     status: PlanStatus;
-    rejectionReason?: string;  // motivazione del rigetto
-    reviewedBy?: number;       // id dell'operatore che ha valutato
-    reviewedAt?: Date;         // quando è stata valutata
+    rejectionReason?: string;
+    reviewedBy?: number;
+    reviewedAt?: Date;
     createdAt?: Date;
     updatedAt?: Date;
 }
@@ -36,9 +35,8 @@ class NavigationPlan
     declare startDatetime: Date;
     declare endDatetime: Date;
     declare status: PlanStatus;
-    declare rejectionReason?: string;  // motivazione del rigetto
-    declare reviewedBy?: number;       // id dell'operatore che ha valutato
-    //declare tokenCost: number;
+    declare rejectionReason?: string;
+    declare reviewedBy?: number;
     declare readonly createdAt: Date;
     declare readonly updatedAt: Date;
 }
