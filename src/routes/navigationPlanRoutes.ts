@@ -9,6 +9,7 @@ import { checkRole } from '../middleware/checkRole';
 import * as navigationPlanController from '../controllers/navigationPlanController';
 import { createNavigationPlanSchema, reviewNavigationPlanSchema } from '../validation/navigationPlanValidator';
 import { zodValidate } from '../middleware/zodValidator';
+import { UserRole } from '../models/User';
 
 const router = Router();
 
@@ -20,7 +21,7 @@ const router = Router();
  * È possibile inviare query parameters per filtrare i piani di navigazione in base allo stato, alla data di inizio, alla data di fine e al tipo di formato.
  * Esempio di query parameters: /api/plans?status=accepted&dateFrom=2024-01-01&dateTo=2024-12-31&format=pdf
  */
-router.get('/', checkAndVerifyJWT, checkRole('user', 'operator'), navigationPlanController.listNavigationPlans);
+router.get('/', checkAndVerifyJWT, checkRole(UserRole.USER, UserRole.OPERATOR), navigationPlanController.listNavigationPlans);
 
 /**
  * @route POST /api/plans/create-navigation-plan
@@ -28,7 +29,7 @@ router.get('/', checkAndVerifyJWT, checkRole('user', 'operator'), navigationPlan
  * Richiede autenticazione JWT e verifica che l'utente abbia il ruolo di 'user'.
  * Valida i dati del piano di navigazione con Zod e chiama il controller per creare il piano di navigazione.
  */
-router.post('/create-navigation-plan', checkAndVerifyJWT, checkRole('user'), zodValidate(createNavigationPlanSchema), navigationPlanController.createNavigationPlan);
+router.post('/navigation-plan', checkAndVerifyJWT, checkRole(UserRole.USER), zodValidate(createNavigationPlanSchema), navigationPlanController.createNavigationPlan);
 
 /**
  * @route DELETE /api/plans/delete-navigation-plan/:id
@@ -36,7 +37,7 @@ router.post('/create-navigation-plan', checkAndVerifyJWT, checkRole('user'), zod
  * Richiede autenticazione JWT e verifica che l'utente abbia il ruolo di 'user'.
  * Chiama il controller per eliminare il piano di navigazione specificato dall'ID.
  */
-router.delete('/delete-navigation-plan/:id', checkAndVerifyJWT, checkRole('user'), navigationPlanController.deleteNavigationPlan);
+router.delete('/:id', checkAndVerifyJWT, checkRole(UserRole.USER), navigationPlanController.deleteNavigationPlan);
 
 
 /**
@@ -53,7 +54,7 @@ router.delete('/delete-navigation-plan/:id', checkAndVerifyJWT, checkRole('user'
  * Richiede autenticazione JWT e verifica che l'utente abbia il ruolo di 'operator'.
  * Valida i dati della revisione con Zod e chiama il controller per aggiornare lo stato del piano di navigazione specificato dall'ID.
  */
-router.patch('/:id/review', checkAndVerifyJWT, checkRole('operator'), zodValidate(reviewNavigationPlanSchema), navigationPlanController.reviewNavigationPlan);
+router.patch('/:id/review', checkAndVerifyJWT, checkRole(UserRole.OPERATOR), zodValidate(reviewNavigationPlanSchema), navigationPlanController.reviewNavigationPlan);
 
 
 export default router;

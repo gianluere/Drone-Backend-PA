@@ -6,7 +6,6 @@ import { Request, Response, NextFunction } from 'express';
 import { ZodType } from 'zod';
 import { StatusCodes } from 'http-status-codes';
 
-
 /**
  * Funzione che effettua la validazione dei dati. Se a buon termine li converte e li aggiunge nel req.body
  * @param schema Schema che si vuole utilizzare per fare la validazione dei dati
@@ -14,6 +13,7 @@ import { StatusCodes } from 'http-status-codes';
  */
 export const zodValidate = (schema: ZodType) =>
     (req: Request, res: Response, next: NextFunction): void => {
+
         const result = schema.safeParse(req.body);
         console.log(result);
 

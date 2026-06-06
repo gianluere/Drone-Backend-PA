@@ -2,12 +2,14 @@
  * @fileoverview File per la definizione degli schemi di validazione per gli user tramite Zod
  */
 import { z } from 'zod';
+import { UserRole } from '../models/User';
 
 const passwordSchema = z
   .string({ error: 'Password obbligatoria' })
   .min(8, 'La password deve essere di almeno 8 caratteri')
   .regex(/[0-9]/, 'La password deve contenere almeno un numero')
-  .regex(/[!@#$%^&*()_+\-=\[\]{};\':"\\|,.<>\/?]/, 'La password deve contenere almeno un carattere speciale');
+  .regex(/[!@#$%^&*()_+\-=\[\]{};\':"\\|,.<>\/?]/, 'La password deve contenere almeno un carattere speciale')
+  .trim();
 
 export const loginSchema = z.object({
   email: z.email({ error: 'Email non valida' }).min(1, 'Email obbligatoria'),
@@ -17,7 +19,7 @@ export const loginSchema = z.object({
 export const registerSchema = z.object({
   email: z.email({ error: 'Email non valida' }),
   password: passwordSchema,
-  role: z.enum(['user', 'operator', 'admin'], { error: 'Ruolo non valido, valori ammessi: user, operator, admin' }),
+  role: z.enum(UserRole, { error: 'Ruolo non valido, valori ammessi: user, operator, admin' }),
 });
 
 export const chargeTokensSchema = z.object({

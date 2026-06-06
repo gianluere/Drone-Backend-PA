@@ -30,7 +30,7 @@ app.get('/api/health', (req, res) => {
 });
 
 app.use('/api/users', userRoutes); // Rotte per autenticazione e gestione utenti
-app.use('/api/plans', navigationPlanRoutes); // Rotte per gestione piani di navigazione
+app.use('/api/navigation-plans', navigationPlanRoutes); // Rotte per gestione piani di navigazione
 app.use('/api/forbidden-areas', foribiddenAreaRoutes); // Rotte per gestione aree vietate
 
 

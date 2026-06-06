@@ -133,9 +133,9 @@ export class NavigationPlanService {
     }
 
     if (data.vesselCode.length !== 10) throw new Errors.BadRequestError('vesselCode deve essere lungo 10 caratteri');
-    
+
     if (isNaN(data.startDateTime.getTime())) throw new Errors.BadRequestError('startDateTime non valida');
-    
+
     if (isNaN(data.endDateTime.getTime())) throw new Errors.BadRequestError('endDateTime non valida');
 
     if (data.endDateTime.getTime() <= data.startDateTime.getTime()) {
@@ -269,7 +269,7 @@ export class NavigationPlanService {
     const updated = await NavigationPlanDAO.findById(planId)
 
     if (!updated) throw new Errors.NotFoundError('Piano non trovato dopo aggiornamento');
-    
+
     return updated;
 
   }

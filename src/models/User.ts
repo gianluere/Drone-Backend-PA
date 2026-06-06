@@ -1,7 +1,11 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import SequelizeSingleton from '../config/database';
 
-export type UserRole = 'user' | 'operator' | 'admin';
+export enum UserRole {
+  USER = 'user',
+  OPERATOR = 'operator',
+  ADMIN = 'admin',
+}
 export const TOKEN_BALANCE_DEFAULT : number = 30;
 
 interface UserAttributes {
@@ -45,9 +49,9 @@ User.init(
             allowNull: false,
         },
         role: {
-            type: DataTypes.ENUM('user', 'operator', 'admin'),
+            type: DataTypes.ENUM(...Object.values(UserRole)),
             allowNull: false,
-            defaultValue: 'user',
+            defaultValue: UserRole.USER,
         },
         tokenBalance: {
             type: DataTypes.INTEGER,

@@ -59,6 +59,8 @@ export const register = async (req: Request, res: Response, next: NextFunction):
   try {
     const { email, password, role } = req.body as RegisterInput;
 
+    console.log(email, password, role);
+
     if (!email || !password) {
       throw new Errors.BadRequestError('Email e password obbligatori');
     }
