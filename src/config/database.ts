@@ -4,7 +4,7 @@ import { Sequelize } from 'sequelize';
 class SequelizeSingleton {
   private static instance: Sequelize | null = null;
 
-  private constructor() {}
+  private constructor() { }
 
   public static getInstance(): Sequelize {
     if (!SequelizeSingleton.instance) {

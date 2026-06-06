@@ -20,6 +20,7 @@ import { PlanStatus } from '../models/NavigationPlan';
 import { StatusCodes } from 'http-status-codes';
 import { CreateNavigationPlanInput, ReviewNavigationPlanInput } from '../validation/navigationPlanValidator';
 import { ForbiddenAreaService } from '../services/forbiddenAreaServices';
+import { UserRole } from '../models/User';
 
 
 const navigationPlanService = new NavigationPlanService();
@@ -69,7 +70,7 @@ const isPointInsideBox = (point: Point, box: BoundingBox): boolean => {
  */
 export const listNavigationPlans = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const userId = req.user!.role === 'user' ? req.user!.userId : undefined;
+    const userId = req.user!.role === UserRole.USER ? req.user!.userId : undefined;
 
     const { status, dateFrom, dateTo, format } = req.query as {
       status?: string;
@@ -77,9 +78,6 @@ export const listNavigationPlans = async (req: AuthenticatedRequest, res: Respon
       dateTo?: string;
       format?: string;
     };
-
-    console.log("userId: ", userId);
-    console.log("Dati: ", status, dateFrom, dateTo, format);
 
     if (status) {
       if (!Object.values(PlanStatus).includes(status as PlanStatus)) {
@@ -98,16 +96,19 @@ export const listNavigationPlans = async (req: AuthenticatedRequest, res: Respon
 
     const plans = await navigationPlanService.getPlans({ status, dateFrom, dateTo }, userId);
 
-    if (format !== 'pdf' && format !== 'json' && format !== undefined) {
-      throw new Errors.BadRequestError('format non valido, valori ammessi: json, pdf');
+    if (userId) {
+      if (format !== 'pdf' && format !== 'json' && format !== undefined) {
+        throw new Errors.BadRequestError('format non valido, valori ammessi: json, pdf');
+      }
+      if (format === 'pdf') {
+        const pdfBuffer = await navigationPlanService.exportToPdf(plans);
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'attachment; filename="plans.pdf"');
+        res.send(pdfBuffer);
+        return;
+      }
     }
-    if (format === 'pdf') {
-      const pdfBuffer = await navigationPlanService.exportToPdf(plans);
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', 'attachment; filename="plans.pdf"');
-      res.send(pdfBuffer);
-      return;
-    }
+
 
     res.json(plans);
   } catch (err) {
@@ -124,16 +125,16 @@ export const listNavigationPlans = async (req: AuthenticatedRequest, res: Respon
  *//*
 export const listFilteredNavigationPlans = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
 
-  try {
-    const status = req.params.status as string;
-    if (!Object.values(PlanStatus).includes(status as PlanStatus)) {
-      throw new Errors.BadRequestError('status non valido');
-    }
-    const plans = await navigationPlanService.getPlans({ status });
-    res.json(plans);
-  } catch (err) {
-    next(err);
-  }
+ try {
+   const status = req.params.status as string;
+   if (!Object.values(PlanStatus).includes(status as PlanStatus)) {
+     throw new Errors.BadRequestError('status non valido');
+   }
+   const plans = await navigationPlanService.getPlans({ status });
+   res.json(plans);
+ } catch (err) {
+   next(err);
+ }
 }*/
 
 
@@ -160,10 +161,7 @@ export const createNavigationPlan = async (req: AuthenticatedRequest, res: Respo
       throw new Errors.BadRequestError('Dati del piano di navigazione non validi');
     }
 
-    const forbiddenAreas = (await forbiddenAreaService.getForbiddenAreas());//.sort((a, b) => a.id - b.id);
-
-    console.log('Waypoints ricevuti:', waypoints);
-    console.log('Forbidden areas:', forbiddenAreas);
+    const forbiddenAreas = (await forbiddenAreaService.getForbiddenAreas());
 
     const violation = waypoints.find(wp =>
       forbiddenAreas.some(area =>

@@ -1,13 +1,27 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import SequelizeSingleton from '../config/database';
 
+/**
+ * Ruoli disponibili per un utente nel sistema.
+ *
+ * - USER: utente standard con permessi base
+ * - OPERATOR: operatore con permessi di gestione/validazione
+ * - ADMIN: amministratore può ricaricare il saldo dello user
+ */
 export enum UserRole {
   USER = 'user',
   OPERATOR = 'operator',
   ADMIN = 'admin',
 }
+
+/**
+ * Valore di default assegnato al saldo token di un utente.
+ */
 export const TOKEN_BALANCE_DEFAULT : number = 30;
 
+/**
+ * Attributi completi del modello User.
+ */
 interface UserAttributes {
     id: number;
     email: string;
@@ -18,8 +32,18 @@ interface UserAttributes {
     updatedAt?: Date;
 }
 
+/**
+ * Attributi necessari per la creazione di un utente.
+ *
+ * `id` e `tokenBalance` sono opzionali perché:
+ * - id è auto-incrementale
+ * - tokenBalance ha un default value
+ */
 interface UserCreationAttributes extends Optional<UserAttributes, 'id' | 'tokenBalance'> { }
 
+/**
+ * Modello Sequelize che rappresenta la tabella `users`.
+ */
 class User extends Model<UserAttributes, UserCreationAttributes>
     implements UserAttributes {
     declare id: number;
@@ -31,6 +55,11 @@ class User extends Model<UserAttributes, UserCreationAttributes>
     declare readonly updatedAt: Date;
 }
 
+/**
+ * Inizializzazione del modello User.
+ *
+ * Mappa la classe TypeScript alla tabella SQL `users`.
+ */
 User.init(
     {
         id: {
@@ -67,7 +96,5 @@ User.init(
         underscored: true,
     }
 );
-
-//User.hasMany(NavigationPlan, { foreignKey: 'userId', sourceKey: 'id', as: 'navigationPlans' });
 
 export default User;

@@ -2,6 +2,7 @@
  * @fileoverview File per la definizione degli schemi di validazione per i piani di navigazione tramite Zod
  */
 import { z } from 'zod';
+import { PlanStatus } from '../models/NavigationPlan';
 
 const latitudeSchema = z.number({ error: 'Latitudine deve essere un numero' })
     .min(-90, 'Latitudine deve essere compresa tra -90 e 90')
@@ -49,11 +50,11 @@ export const createNavigationPlanSchema = z.object({
     );
 
 export const reviewNavigationPlanSchema = z.object({
-    status: z.enum(['accepted', 'rejected']),
+    status: z.enum([PlanStatus.ACCEPTED, PlanStatus.REJECTED], {error : 'Status non valido, valori ammessi: accepted e rejected'}),
     rejectionReason: z.string().min(1, 'La motivazione è obbligatoria').optional(),
 }).refine(
     (data) =>
-        data.status !== 'rejected' || data.rejectionReason !== undefined,
+        data.status !== PlanStatus.REJECTED || data.rejectionReason !== undefined,
     {
         message: 'La motivazione è obbligatoria quando si rigetta un piano',
         path: ['rejectionReason']
@@ -61,7 +62,7 @@ export const reviewNavigationPlanSchema = z.object({
 )
     .refine(
         (data) =>
-            data.status !== 'accepted' || data.rejectionReason === undefined,
+            data.status !== PlanStatus.ACCEPTED || data.rejectionReason === undefined,
         {
             message: 'La motivazione non deve essere presente se accettato',
             path: ['rejectionReason']

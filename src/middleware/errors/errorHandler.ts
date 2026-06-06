@@ -6,7 +6,6 @@ import { Request, Response, NextFunction } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import { AppError } from './errorsClass';
 
-
 /**
  * Funzione per gestire gli errori.
  * @param err Errore che viene generato dalle varie funzioni e rilevato tramite try/catch

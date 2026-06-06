@@ -15,7 +15,6 @@ export const zodValidate = (schema: ZodType) =>
     (req: Request, res: Response, next: NextFunction): void => {
 
         const result = schema.safeParse(req.body);
-        console.log(result);
 
         if (!result.success) {
 

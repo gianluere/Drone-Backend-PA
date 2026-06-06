@@ -3,7 +3,6 @@ import { UserRole } from '../models/User';
 import { AuthenticatedRequest } from './JWTAuth';
 import { StatusCodes } from 'http-status-codes';
 
-
 /**
  * Middleware che controlla il ruolo autorizzizato passato alla funzione
  * @param roles ruoli che possono essere autorizzati

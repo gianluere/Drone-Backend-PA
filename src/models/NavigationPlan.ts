@@ -1,14 +1,30 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import SequelizeSingleton from '../config/database';
 
+/**
+ * Costo in token necessario per creare un piano di navigazione.
+ */
 export const TOKEN_COST_PER_PLAN = 5;
 
+/**
+ * Stati possibili di un piano di navigazione.
+ *
+ * - PENDING: in attesa di revisione
+ * - ACCEPTED: approvato dall’operatore
+ * - REJECTED: rifiutato dall’operatore
+ */
 export enum PlanStatus {
     PENDING = 'pending',
     ACCEPTED = 'accepted',
     REJECTED = 'rejected'
 }
 
+/**
+ * Attributi del modello NavigationPlan.
+ *
+ * Rappresenta un piano di navigazione creato da un utente,
+ * che può essere successivamente approvato o rifiutato da un operatore.
+ */
 interface NavigationPlanAttributes {
     id: number;
     userId: number;
@@ -23,9 +39,17 @@ interface NavigationPlanAttributes {
     updatedAt?: Date;
 }
 
-interface NavigationPlanCreationAttributes
-    extends Optional<NavigationPlanAttributes, 'id' | 'status'> { }
+/**
+ * Attributi necessari per la creazione di un piano di navigazione.
+ *
+ * - id è auto-generato
+ * - status ha valore di default (PENDING)
+ */
+interface NavigationPlanCreationAttributes extends Optional<NavigationPlanAttributes, 'id' | 'status'> { }
 
+/**
+* Modello Sequelize che rappresenta la tabella `navigation_plans`.
+*/
 class NavigationPlan
     extends Model<NavigationPlanAttributes, NavigationPlanCreationAttributes>
     implements NavigationPlanAttributes {
@@ -41,6 +65,14 @@ class NavigationPlan
     declare readonly updatedAt: Date;
 }
 
+/**
+ * Inizializzazione del modello NavigationPlan.
+ *
+ * Mappa la classe al database e definisce:
+ * - vincoli sui dati
+ * - relazioni logiche (FK verso users)
+ * - validazioni base (es. lunghezza vesselCode)
+ */
 NavigationPlan.init(
     {
         id: {
@@ -95,8 +127,5 @@ NavigationPlan.init(
         underscored: true,
     }
 );
-
-//NavigationPlan.belongsTo(User, { foreignKey: 'userId', targetKey: 'id', as: 'user' });
-//NavigationPlan.hasMany(Waypoint, { foreignKey: 'planId', sourceKey: 'id', as: 'waypoints' });
 
 export default NavigationPlan;

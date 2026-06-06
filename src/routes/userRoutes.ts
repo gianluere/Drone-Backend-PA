@@ -10,7 +10,12 @@ import { checkRole } from '../middleware/checkRole';
 import { zodValidate } from '../middleware/zodValidator';
 import { chargeTokensSchema, loginSchema, registerSchema } from '../validation/userValidator';
 import { UserRole } from '../models/User';
+import { RequestHandler } from 'express';
 
+const protect = (...roles: UserRole[]): RequestHandler[] => [
+  checkAndVerifyJWT,
+  checkRole(...roles),
+];
 
 const router = Router();
 
@@ -34,6 +39,6 @@ router.post('/register', zodValidate(registerSchema), userController.register);
  * Richiede autenticazione JWT, verifica che l'utente abbia il ruolo di admin.
  * Valida i dati con Zod e chiama il controller per eseguire la ricarica dei token.
  */
-router.patch('/charge-tokens', checkAndVerifyJWT, checkRole(UserRole.ADMIN), zodValidate(chargeTokensSchema), userController.chargeTokens);
+router.patch('/charge-tokens', protect(UserRole.ADMIN), zodValidate(chargeTokensSchema), userController.chargeTokens);
 
 export default router;

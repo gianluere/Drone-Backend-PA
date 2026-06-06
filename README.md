@@ -33,42 +33,18 @@ cd drone-backend
 
 ### 2. Configura le variabili d'ambiente
 
-Copia il file di esempio e compilalo con i valori corretti:
-
-```bash
-cp .env.example .env
-```
-
-Contenuto del file `.env`:
-
-```env
-NODE_ENV=production
-PORT=3000
-
-POSTGRES_HOST=postgres
-POSTGRES_PORT=5432
-POSTGRES_DB=drone_nav
-POSTGRES_USER=drone_user
-POSTGRES_PASSWORD=cambia_questa_password
-
-JWT_PRIVATE_KEY="-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----"
-JWT_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----\n...\n-----END PUBLIC KEY-----"
-JWT_EXPIRES_IN=8h
-```
+Configurare correttamente il file .env e creare le chiavi RSA come di seguito spiegato.
 
 Per generare le chiavi RSA:
 
 ```bash
 # chiave privata
-openssl genrsa -out private.key 2048
+ssh-keygen -t rsa -b 4096 -m PEM -f jwtRS256.key
 
 # chiave pubblica
-openssl rsa -in private.key -pubout -out public.key
-
-# converti in formato inline per il .env
-awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' private.key
-awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' public.key
+openssl rsa -in jwtRS256.key -pubout -outform PEM -out jwtRS256.key.pub
 ```
+Caricare poi le due chiavi nel file .env.
 
 ### 3. Avvia i container
 
@@ -99,17 +75,18 @@ docker compose exec backend npx sequelize-cli db:seed:all
 ### 6. Verifica il funzionamento
 
 ```bash
-curl http://localhost:3000/api/areas
+curl http://localhost:3000/api/health
 ```
 
 ### Credenziali di default (seeder)
 
 | Email | Password | Ruolo |
 |-------|----------|-------|
-| user1@example.com | Password1! | user |
-| user2@example.com | Password1! | user |
-| operator@example.com | Password1! | operator |
-| admin@example.com | Password1! | admin |
+| user1@example.com | Password123! | user |
+| user2@example.com | Password123! | user |
+| user3@example.com | Password123! | user | #questo ha solo 5 token, in modo da poter testare i casi con 0 token dopo averne creato uno
+| operator@example.com | Password123! | operator |
+| admin@example.com | Password123! | admin |
 
 ### Comandi utili
 
@@ -213,18 +190,46 @@ La connessione al database è gestita tramite il pattern Singleton implementato 
 class SequelizeSingleton {
   private static instance: Sequelize | null = null;
 
+  private constructor() {}
+
   public static getInstance(): Sequelize {
     if (!SequelizeSingleton.instance) {
-      SequelizeSingleton.instance = new Sequelize({ ... });
+      SequelizeSingleton.instance = new Sequelize({
+        dialect: "postgres",
+        host: process.env.POSTGRES_HOST ?? "localhost",
+        port: Number(process.env.POSTGRES_PORT ?? 5432),
+        database: process.env.POSTGRES_DB ?? "mydb",
+        username: process.env.POSTGRES_USER ?? "myuser",
+        password: process.env.POSTGRES_PASSWORD ?? "mypassword",
+
+        logging: process.env.NODE_ENV === "development" ? console.log : false,
+
+        pool: {
+          max: 10,
+          min: 0,
+          acquire: 30_000,
+          idle: 10_000,
+        },
+      });
     }
+
     return SequelizeSingleton.instance;
+  }
+
+  public static async close(): Promise<void> {
+    if (SequelizeSingleton.instance) {
+      await SequelizeSingleton.instance.close();
+      SequelizeSingleton.instance = null;
+    }
   }
 }
 ```
 
 La scelta del Singleton esplicito, rispetto al Singleton implicito basato sulla cache dei moduli Node.js, è motivata dalla necessità di controllare con precisione il momento della creazione della connessione — che deve avvenire solo dopo che le variabili d'ambiente sono state caricate — e di gestire la chiusura ordinata del pool di connessioni in risposta al segnale `SIGTERM` di Docker.
 
-### MVC — Model View Service
+Iil Singleton è stato inoltre usato, anche se non in modo esplicito, sui DAO, poiché al termine della definizione della classe è stato fatto l'export di una nuova istanza e non di tutta la classe, in modo da poter usare sempre lo stesso oggetto ove necessario e non crearlo più volte.
+
+### MVC — Model View Controller
 
 Il progetto adotta una variante del pattern MVC adatta al contesto di una REST API, dove la View è sostituita dalla risposta JSON:
 
@@ -244,7 +249,7 @@ La catena applicata alle rotte protette è:
 Richiesta HTTP
     → JWTAuth (verifica il token)
     → checkRole (verifica il ruolo)
-    → zodValidate (valida il body/query)
+    → zodValidate (valida il body)
     → Controller (elabora la richiesta)
     → errorHandler (gestisce gli errori)
 ```

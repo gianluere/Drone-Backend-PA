@@ -8,9 +8,6 @@ import jwt from 'jsonwebtoken';
 import { UserRole } from '../models/User';
 import { StatusCodes } from 'http-status-codes';
 
-//const public_key = fs.readFileSync(path.resolve(__dirname, 'jwtRS256.key.pub'), 'utf8');
-
-
 export interface JwtPayload {
   userId: number;
   email: string;
@@ -19,9 +16,8 @@ export interface JwtPayload {
 
 // estende Request per aggiungere user
 export interface AuthenticatedRequest extends Request {
-    user?: JwtPayload;
+  user?: JwtPayload;
 }
-  
 
 /**
  * Middleware per verificare la presenza e validità del token JWT nelle richieste.
@@ -39,14 +35,14 @@ export const checkAndVerifyJWT = (req: Request, res: Response, next: NextFunctio
 
   // 1. header presente?
   if (!rawToken) {
-    res.status(StatusCodes.UNAUTHORIZED).json({ error: 'Auth token not available in the header' });
+    res.status(StatusCodes.UNAUTHORIZED).json({ error: 'Auth token non disponibile nell\'header' });
     return;
   }
 
   // 2. formato corretto?
   const splittedRawToken = rawToken.split(' ');
   if (splittedRawToken.length !== 2 || splittedRawToken[0] !== 'Bearer') {
-    res.status(StatusCodes.UNAUTHORIZED).json({ error: 'Auth token is not in the correct format' });
+    res.status(StatusCodes.UNAUTHORIZED).json({ error: 'L\'auth token non è nel formato corretto' });
     return;
   }
 
@@ -54,8 +50,6 @@ export const checkAndVerifyJWT = (req: Request, res: Response, next: NextFunctio
   try {
     const decoded = jwt.verify(
       splittedRawToken[1],
-      //process.env.JWT_PUBLIC_KEY!.replace(/\\n/g, '\n'),
-      //public_key,
       process.env.JWT_PUBLIC_KEY!.replace(/\\n/g, '\n'),
       { algorithms: ['RS256'] }
     ) as JwtPayload;
@@ -66,7 +60,6 @@ export const checkAndVerifyJWT = (req: Request, res: Response, next: NextFunctio
     res.status(StatusCodes.UNAUTHORIZED).json({ error: 'Token non valido o scaduto' });
   }
 };
-
 
 /**
  * Funzione per firmare un nuovo token JWT con un payload specificato.

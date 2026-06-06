@@ -1,6 +1,12 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import SequelizeSingleton from '../config/database';
 
+/**
+ * Attributi del modello ForbiddenArea.
+ *
+ * Rappresenta un'area geografica vietata alla navigazione,
+ * definita tramite bounding box (lat/lon min e max).
+ */
 interface ForbiddenAreaAttributes {
     id: number;
     name: string;
@@ -14,9 +20,21 @@ interface ForbiddenAreaAttributes {
     updatedAt?: Date;
 }
 
+/**
+ * Attributi richiesti per la creazione di una ForbiddenArea.
+ *
+ * `id` è auto-generato dal database.
+ * `description` è opzionale.
+ */
 interface ForbiddenAreaCreationAttributes
     extends Optional<ForbiddenAreaAttributes, 'id' | 'description'> { }
 
+/**
+ * Modello Sequelize che rappresenta la tabella `forbidden_areas`.
+ *
+ * Ogni record rappresenta un'area geografica vietata alla navigazione,
+ * definita da un rettangolo (bounding box) tramite coordinate GPS.
+ */
 class ForbiddenArea
     extends Model<ForbiddenAreaAttributes, ForbiddenAreaCreationAttributes>
     implements ForbiddenAreaAttributes {
@@ -32,9 +50,14 @@ class ForbiddenArea
     declare readonly updatedAt: Date;
 }
 
+/**
+ * Inizializzazione del modello ForbiddenArea.
+ *
+ * Mappa il modello alla tabella `forbidden_areas` nel database.
+ */
 ForbiddenArea.init(
     {
-        id: {type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true},
+        id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
         name: { type: DataTypes.STRING, allowNull: false },
         description: { type: DataTypes.TEXT },
         latMin: { type: DataTypes.DOUBLE, allowNull: false, validate: { min: -90, max: 90 } },

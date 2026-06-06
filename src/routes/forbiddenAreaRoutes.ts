@@ -10,7 +10,12 @@ import { checkRole } from '../middleware/checkRole';
 import { zodValidate } from '../middleware/zodValidator';
 import { createForbiddenAreaSchema, updateForbiddenAreaSchema } from '../validation/forbiddenAreaValidator';
 import { UserRole } from '../models/User';
+import { RequestHandler } from 'express';
 
+const protect = (...roles: UserRole[]): RequestHandler[] => [
+  checkAndVerifyJWT,
+  checkRole(...roles),
+];
 
 const router = Router();
 
@@ -28,7 +33,7 @@ router.get('/', forbiddenAreaController.getForbiddenArea);
  * Richiede autenticazione JWT e verifica che l'utente abbia il ruolo di 'operator'.
  * Valida i dati dell'area proibita con Zod e chiama il controller per creare l'area proibita.
  */
-router.post('/forbidden-area', checkAndVerifyJWT, checkRole(UserRole.OPERATOR), zodValidate(createForbiddenAreaSchema), forbiddenAreaController.createForbiddenArea);
+router.post('/forbidden-area', protect(UserRole.OPERATOR), zodValidate(createForbiddenAreaSchema), forbiddenAreaController.createForbiddenArea);
 
 /**
  * @route PATCH /api/forbidden-areas/update-forbidden-area/:id
@@ -36,7 +41,7 @@ router.post('/forbidden-area', checkAndVerifyJWT, checkRole(UserRole.OPERATOR), 
  * Richiede autenticazione JWT e verifica che l'utente abbia il ruolo di 'operator'.
  * Valida i dati dell'area proibita con Zod e chiama il controller per aggiornare l'area proibita.
  */
-router.patch('/forbidden-area/:id', checkAndVerifyJWT, checkRole(UserRole.OPERATOR), zodValidate(updateForbiddenAreaSchema), forbiddenAreaController.updateForbiddenArea);
+router.patch('/forbidden-area/:id', protect(UserRole.OPERATOR), zodValidate(updateForbiddenAreaSchema), forbiddenAreaController.updateForbiddenArea);
 
 
 /**
@@ -45,6 +50,6 @@ router.patch('/forbidden-area/:id', checkAndVerifyJWT, checkRole(UserRole.OPERAT
  * Richiede autenticazione JWT e verifica che l'utente abbia il ruolo di 'operator'.
  * Chiama il controller per eliminare l'area proibita specificata dall'ID.
  */
-router.delete('/forbidden-area/:id', checkAndVerifyJWT, checkRole(UserRole.OPERATOR), forbiddenAreaController.deleteForbiddenArea);
+router.delete('/forbidden-area/:id', protect(UserRole.OPERATOR), forbiddenAreaController.deleteForbiddenArea);
 
 export default router;

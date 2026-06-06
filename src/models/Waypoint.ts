@@ -1,7 +1,12 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import SequelizeSingleton from '../config/database';
-//import NavigationPlan from './NavigationPlan';
 
+/**
+ * Attributi del modello Waypoint.
+ *
+ * Un waypoint rappresenta un punto geografico appartenente
+ * a un piano di navigazione, ordinato tramite sequenceOrder.
+ */
 interface WaypointAttributes {
     id: number;
     planId: number;
@@ -10,8 +15,21 @@ interface WaypointAttributes {
     longitude: number;
 }
 
+/**
+ * Attributi necessari per la creazione di un waypoint.
+ *
+ * `id` è auto-generato dal database.
+ */
 interface WaypointCreationAttributes extends Optional<WaypointAttributes, 'id'> { }
 
+/**
+ * Modello Sequelize che rappresenta la tabella `waypoints`.
+ *
+ * Ogni waypoint:
+ * - appartiene a un NavigationPlan (FK planId)
+ * - rappresenta un punto geografico (lat/lon)
+ * - ha un ordine sequenziale per ricostruire la rotta
+ */
 class Waypoint extends Model<WaypointAttributes, WaypointCreationAttributes>
     implements WaypointAttributes {
     declare id: number;
@@ -21,6 +39,11 @@ class Waypoint extends Model<WaypointAttributes, WaypointCreationAttributes>
     declare longitude: number;
 }
 
+/**
+ * Inizializzazione del modello Waypoint.
+ *
+ * Mappa la classe alla tabella `waypoints` nel database.
+ */
 Waypoint.init(
     {
         id: {
@@ -56,8 +79,5 @@ Waypoint.init(
         timestamps: false,
     }
 );
-
-//Waypoint.belongsTo(NavigationPlan, { foreignKey: 'planId', targetKey: 'id', as: 'navigationPlan' });
-
 
 export default Waypoint;
