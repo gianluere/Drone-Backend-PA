@@ -1,13 +1,13 @@
 # Drone-Backend-PA
 
-Il sistema gestisce i piani di navigazione di droni marini autonomi attraverso un flusso di approvazione strutturato. Gli utenti sottomettono richieste di navigazione specificando l'imbarcazione, le date di inizio e fine e la rotta composta da una serie di waypoint geografici. Ogni richiesta viene validata automaticamente dal sistema — che verifica la disponibilità di credito, il rispetto del preavviso minimo di 48 ore e l'assenza di sovrapposizioni con aree vietate — e poi valutata da un operatore che può approvarla o rifiutarla fornendo una motivazione. Il credito degli utenti è gestito tramite token virtuali, con un costo fisso di 5 token per ogni piano sottomesso, e può essere ricaricato dagli amministratori.
+Il sistema gestisce i piani di navigazione di droni marini autonomi attraverso un flusso di approvazione strutturato. Gli utenti sottomettono richieste di navigazione specificando l'imbarcazione, le date di inizio e fine e la rotta composta da una serie di waypoint geografici. Ogni richiesta viene validata automaticamente dal sistema — che verifica la disponibilità di credito, il rispetto del preavviso minimo di 48 ore e l'assenza di sovrapposizioni con aree vietate — e poi valutata da un operatore che può approvarla o rifiutarla fornendo una motivazione. Il credito degli utenti è gestito tramite token virtuali, con un costo fisso per ogni piano sottomesso, e può essere ricaricato dagli amministratori.
 
 ## Funzionalità per ruolo
 ### Utente
 - **Registrazione e login** — creazione account con email, password e ruolo; autenticazione tramite JWT RS256
-- **Crea un piano di navigazione** — sottomette una richiesta specificando il codice imbarcazione (10 caratteri), data e ora di inizio e fine navigazione, e la rotta come array di waypoint geografici. Il sistema verifica automaticamente che l'utente abbia inserito tutti i dati correttamente e se le validazioni passano, viene creato il nuovo piano di navigazione
-- **Cancella un piano di navigazione** — ritira una richiesta ancora in stato pending; i token non vengono rimborsati
-- **Elenca i propri piani** — visualizza la lista dei piani con filtri opzionali; supporta l'esportazione in formato JSON o PDF
+- **Crea un piano di navigazione** — sottomette una richiesta specificando il codice imbarcazione, data e ora di inizio e fine navigazione, e la rotta come array di waypoint geografici. Il sistema verifica automaticamente che l'utente abbia inserito tutti i dati correttamente e se le validazioni passano, viene creato il nuovo piano di navigazione
+- **Cancella un piano di navigazione** — ritira una richiesta ancora in stato pending e i token vengono rimborsati
+- **Elenca i propri piani** — visualizza la lista dei piani con filtri opzionali e supporta l'esportazione in formato JSON o PDF
 
 ### Operatore
 - **Gestisce le aree vietate** — crea, aggiorna e cancella aree vietate definite come bounding box rettangolare tramite due coppie di coordinate (latitudine e longitudine minima e massima)
@@ -44,7 +44,7 @@ Il sistema gestisce i piani di navigazione di droni marini autonomi attraverso u
 ### 1. Clona il repository
 
 ```bash
-git clone https://github.com/tuo-utente/drone-backend.git
+git clone https://github.com/gianluere/Drone-Backend-PA.git
 cd drone-backend
 ```
 
@@ -61,7 +61,7 @@ ssh-keygen -t rsa -b 4096 -m PEM -f jwtRS256.key
 # chiave pubblica
 openssl rsa -in jwtRS256.key -pubout -outform PEM -out jwtRS256.key.pub
 ```
-Caricare poi le due chiavi nel file .env.
+Caricare poi le due chiavi nel file .env come JWT_PRIVATE_KEY e JWT_PUBLIC_KEY.
 
 ### 3. Avvia i container
 
@@ -164,6 +164,8 @@ Una volta completata l'elaborazione — con successo o con un errore — la risp
 
 ## Diagrammi di sequenza delle api più complesse
 
+Si tiene a precisare che in realtà tutti gli errori che vengono visualizzati nei seguenti diagrammi vengono creati dai Service, ma poi vengono catturati e gestiti dall'errorHandler(middleware), che si occupa poi di inviare una risposta HTTP al Client. Quindi non è realmente il Service ad inviare direttamente la risposta HTTP come mostrato, ma una semplificazione per non introdurre ulteriori elementi.
+
 Ricarica Token di uno user
 ![Diagramma-sequenza-ricarica-token](documentazione/SequenzaToken.png)
 
@@ -182,6 +184,11 @@ Aggiorna area vietata
 ---
 
 ## Esempi di utilizzo di alcune API
+
+Esistono principalmente 3 suddivisioni (path):
+- **/api/users**: comprende login, registrazione e ricaricaToken
+- **/api/navigation-plans**: comprende CRUD dei piani di navigazione (complete di autenticazoine e autorizzazione)
+- **/api/forbidden-areas**: comprende CRUD delle aree vietate (complete di autenticazoine e autorizzazione)
 
 ### Autenticazione
 
