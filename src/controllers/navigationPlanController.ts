@@ -81,17 +81,19 @@ export const listNavigationPlans = async (req: AuthenticatedRequest, res: Respon
 
     if (status) {
       if (!Object.values(PlanStatus).includes(status as PlanStatus)) {
-        throw new Errors.BadRequestError('status non valido');
+        throw new Errors.BadRequestError(`status non valido, valori ammessi: ${Object.values(PlanStatus).join(', ')}`);
       }
     }
 
-    if (dateFrom && isNaN(Date.parse(dateFrom))) {
-      throw new Errors.BadRequestError('dateFrom non valida');
-    }
+    if (userId) {
+      if (dateFrom && isNaN(Date.parse(dateFrom))) {
+        throw new Errors.BadRequestError('dateFrom non valida');
+      }
 
-    if (dateTo && isNaN(Date.parse(dateTo))) {
-      throw new Errors.BadRequestError('dateTo non valida');
+      if (dateTo && isNaN(Date.parse(dateTo))) {
+        throw new Errors.BadRequestError('dateTo non valida');
 
+      }
     }
 
     const plans = await navigationPlanService.getPlans({ status, dateFrom, dateTo }, userId);
@@ -110,33 +112,11 @@ export const listNavigationPlans = async (req: AuthenticatedRequest, res: Respon
     }
 
 
-    res.json(plans);
+    res.status(StatusCodes.OK).json(plans);
   } catch (err) {
     next(err);
   }
 };
-
-/**
- * Restituisce i piani di navigazione filtrati per status.
- *
- * @param req Request con status nei params.
- * @param res Response HTTP.
- * @param next Middleware error handling.
- *//*
-export const listFilteredNavigationPlans = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
-
- try {
-   const status = req.params.status as string;
-   if (!Object.values(PlanStatus).includes(status as PlanStatus)) {
-     throw new Errors.BadRequestError('status non valido');
-   }
-   const plans = await navigationPlanService.getPlans({ status });
-   res.json(plans);
- } catch (err) {
-   next(err);
- }
-}*/
-
 
 /**
  * Crea un nuovo piano di navigazione.

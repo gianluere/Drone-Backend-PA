@@ -17,7 +17,7 @@
     "resolveJsonModule": true,
     "sourceMap": true,
 
-    "types": ["node"]
+    "types": ["node", "jest"]
   },
   "include": ["src/**/*.ts", "src/index.js", "src/db/models/index.ts"],
   "exclude": ["node_modules", "dist"]

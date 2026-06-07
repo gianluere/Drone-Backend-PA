@@ -57,11 +57,15 @@ export class NavigationPlanService {
       status = filters.status as PlanStatus;
     }
 
+    // piani per l'operatore che può filtrare solo per status
+    if (!userId) {
+      return await NavigationPlanDAO.findAllByStatus(status);
+    }
+
     // validazione dateFrom
     let dateFrom: Date | undefined;
     if (filters.dateFrom) {
       dateFrom = new Date(filters.dateFrom);
-      console.log('dateFrom: ', dateFrom);
       if (isNaN(dateFrom.getTime())) throw new Errors.BadRequestError('dateFrom non valida');
     }
 
@@ -69,7 +73,6 @@ export class NavigationPlanService {
     let dateTo: Date | undefined;
     if (filters.dateTo) {
       dateTo = new Date(filters.dateTo);
-      console.log('dateTo: ', dateTo);
       if (isNaN(dateTo.getTime())) throw new Errors.BadRequestError('dateTo non valida');
     }
 
@@ -77,11 +80,8 @@ export class NavigationPlanService {
     if (dateFrom && dateTo && dateFrom > dateTo) {
       throw new Errors.BadRequestError('dateFrom non può essere successiva a dateTo');
     }
-    if (userId) {
-      return NavigationPlanDAO.findAllByUser(userId, { status, dateFrom, dateTo });
-    }
 
-    const plans = await NavigationPlanDAO.findAllByStatus(status);
+    const plans = await NavigationPlanDAO.findAllByUser(userId, { status, dateFrom, dateTo });
     return plans;
   }
 
@@ -115,7 +115,6 @@ export class NavigationPlanService {
       }
 
       plans.forEach((plan, i) => {
-        console.log(plan.rejectionReason)
         doc.fontSize(13).text(`Piano ${i + 1}`, { underline: true });
         doc.fontSize(11)
           .text(`ID: ${plan.id}`)

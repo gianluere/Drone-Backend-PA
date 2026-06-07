@@ -262,3 +262,33 @@ Questo pattern permette di comporre la pipeline di elaborazione in modo dichiara
 Ogni entità del dominio ha una classe DAO dedicata che incapsula tutte le operazioni di accesso al database. I DAO sono esportati come istanze singleton sfruttando la cache dei moduli Node.js, garantendo un unico punto di accesso al database per ogni entità.
 
 La separazione tra DAO e Service è motivata dal principio di singola responsabilità: i DAO non sanno nulla delle regole di business, i service non sanno nulla di come i dati vengono recuperati. Questo rende possibile modificare le query senza toccare la logica applicativa e viceversa, e semplifica i test unitari permettendo di sostituire i DAO con mock nelle classi di test.
+
+## Testing
+
+I test sono stati implementati utilizzando Jest come framework di testing, con ts-jest per la compilazione TypeScript. I test si concentrano sui middleware di autenticazione e autorizzazione, che rappresentano i componenti critici per la sicurezza del sistema.\
+\
+I test adottano un approccio di unit testing — ogni middleware viene testato in isolamento, senza coinvolgere il server HTTP, il database o altri componenti esterni. Questo è reso possibile tramite il sistema di mock di Jest, che permette di sostituire le dipendenze reali con versioni controllate che simulano i comportamenti desiderati.\
+Per ogni test vengono creati oggetti fittizi di Request, Response e NextFunction di Express:\
+
+**mockReq** — simula la richiesta HTTP con solo i campi necessari al middleware
+**mockRes** — simula la risposta HTTP con i metodi status() e json() tracciati da Jest, che permettono di verificare con quali argomenti sono stati chiamati
+**mockNext** — simula la funzione next() di Express, tracciata da Jest per verificare se il middleware ha passato il controllo al componente successivo
+
+### Test di checkAndVerifyJWT
+Il middleware checkAndVerifyJWT è responsabile della verifica del token JWT in ogni richiesta autenticata. La libreria jsonwebtoken viene sostituita interamente con un mock tramite jest.mock('jsonwebtoken'), permettendo di simulare token validi, scaduti o malformati senza dover generare chiavi RSA reali.
+I casi testati sono:
+
+**Token assente** — verifica che il middleware risponda con 401 quando l'header Authorization non è presente nella richiesta
+**Formato non valido** — verifica che il middleware risponda con 401 quando l'header non rispetta il formato Bearer token
+**Token non valido o scaduto** — simula un'eccezione lanciata da jwt.verify e verifica che il middleware risponda con 401
+**Token valido** — simula un payload decodificato restituito da jwt.verify e verifica che il middleware imposti correttamente req.user e chiami next()
+
+### Test di checkRole
+Il middleware checkRole è una higher-order function che riceve i ruoli autorizzati e restituisce un middleware. Viene testato verificando che la combinazione di ruolo dell'utente autenticato e ruoli richiesti dalla rotta produca il comportamento corretto.
+I casi testati sono:
+
+**Utente non autenticato** — verifica che il middleware risponda con 401 quando req.user è undefined, cioè quando checkAndVerifyJWT non ha impostato l'utente
+**Ruolo non autorizzato** — verifica che un utente con ruolo user riceva 403 quando tenta di accedere a una rotta riservata a operator o admin
+**Ruolo autorizzato** — verifica che next() venga chiamato quando il ruolo dell'utente è incluso tra quelli autorizzati
+**Corrispondenza esatta del ruolo** — verifica il caso base in cui il ruolo dell'utente corrisponde esattamente all'unico ruolo richiesto
+**Admin escluso da rotta user** — verifica che admin riceva 403 quando tenta di accedere a una rotta riservata esclusivamente agli utenti con ruolo user
