@@ -23,9 +23,9 @@ module.exports = {
         defaultValue: 'user',
       },
       token_balance: {
-        type: Sequelize.FLOAT,
+        type: Sequelize.INTEGER,
         allowNull: false,
-        defaultValue: 100,
+        defaultValue: 30,
       },
       created_at: {
         type: Sequelize.DATE,

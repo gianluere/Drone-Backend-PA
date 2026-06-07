@@ -49,18 +49,18 @@ module.exports = {
 
     // Waypoint piano 1 — rotta chiusa (primo = ultimo punto)
     await queryInterface.bulkInsert('waypoints', [
-      { plan_id: plan1Id, sequence_order: 1, latitude: 43.600, longitude: 13.500 },
-      { plan_id: plan1Id, sequence_order: 2, latitude: 43.650, longitude: 13.550 },
-      { plan_id: plan1Id, sequence_order: 3, latitude: 43.700, longitude: 13.500 },
-      { plan_id: plan1Id, sequence_order: 4, latitude: 43.600, longitude: 13.500 }, // chiude la rotta
+      { plan_id: plan1Id, sequence_order: 1, latitude: 40.600, longitude: 12.500 },
+      { plan_id: plan1Id, sequence_order: 2, latitude: 41.650, longitude: 12.550 },
+      { plan_id: plan1Id, sequence_order: 3, latitude: 42.000, longitude: 12.500 },
+      { plan_id: plan1Id, sequence_order: 4, latitude: 40.600, longitude: 12.500 },
     ]);
 
     // Waypoint piano 2
     await queryInterface.bulkInsert('waypoints', [
-      { plan_id: plan2Id, sequence_order: 1, latitude: 44.100, longitude: 14.200 },
-      { plan_id: plan2Id, sequence_order: 2, latitude: 44.150, longitude: 14.250 },
-      { plan_id: plan2Id, sequence_order: 3, latitude: 44.200, longitude: 14.300 },
-      { plan_id: plan2Id, sequence_order: 4, latitude: 44.100, longitude: 14.200 }, // chiude la rotta
+      { plan_id: plan2Id, sequence_order: 1, latitude: 40.600, longitude: 15.200 },
+      { plan_id: plan2Id, sequence_order: 2, latitude: 41.650, longitude: 15.550 },
+      { plan_id: plan2Id, sequence_order: 3, latitude: 42.000, longitude: 16.600 },
+      { plan_id: plan2Id, sequence_order: 4, latitude: 40.600, longitude: 15.200 },
     ]);
   },
 

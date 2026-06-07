@@ -1,3 +1,13 @@
+/**
+ * Questo pattern garantisce che esista UNA SOLA istanza
+ * di Sequelize in tutta l'applicazione.
+ *
+ * Evita:
+ * - multiple connessioni al DB
+ * - spreco di risorse
+ * - problemi di sincronizzazione
+ */
+
 import { Sequelize } from 'sequelize';
 
 
