@@ -181,9 +181,167 @@ Aggiorna area vietata
 
 ---
 
-## API principali
+## Esempi di utilizzo di alcune API
 
+### Autenticazione
 
+#### Login
+
+```
+POST /api/users/login
+```
+
+Corpo della richiesta:
+```json
+{
+  "email": "user1@example.com",
+  "password": "Password123!"
+}
+```
+
+Risposta di successo:
+```json
+{
+  "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+---
+
+#### Register
+
+```
+POST /api/users/register
+```
+
+Corpo della richiesta:
+```json
+{
+  "email": "nuovoutente@example.com",
+  "password": "Password123!",
+  "role": "user"
+}
+```
+
+Risposta di successo:
+```json
+{
+  "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+---
+
+### Piani di navigazione
+
+#### Lista piani dell'utente
+
+```
+GET /api/navigation-plans/
+Authorization: Bearer <token>
+Esempio con parametro: GET /api/navigation-plans/?format=pdf
+```
+
+Parametri query opzionali:
+
+| Parametro | Tipo | Descrizione |
+|-----------|------|-------------|
+| `status` | string | Filtra per stato: `pending`, `accepted`, `rejected` |
+| `dateFrom` | string | Data inizio in formato ISO 8601 |
+| `dateTo` | string | Data fine in formato ISO 8601 |
+| `format` | string | Formato esportazione: `json` (default) o `pdf` |
+
+Risposta di successo:
+```json
+[
+  {
+    "id": 1,
+    "userId": 1,
+    "vesselCode": "BOAT000001",
+    "startDatetime": "2026-06-10T10:00:00.000Z",
+    "endDatetime": "2026-06-10T18:00:00.000Z",
+    "status": "pending",
+    "tokenCost": 5,
+    "rejectionReason": null,
+    "reviewedBy": null,
+    "reviewedAt": null,
+    "createdAt": "2026-06-07T10:00:00.000Z",
+    "updatedAt": "2026-06-07T10:00:00.000Z",
+    "waypoints": [
+      { "id": 1, "planId": 1, "sequenceOrder": 1, "latitude": 43.6, "longitude": 13.5 },
+      { "id": 2, "planId": 1, "sequenceOrder": 2, "latitude": 43.65, "longitude": 13.55 },
+      { "id": 3, "planId": 1, "sequenceOrder": 3, "latitude": 43.7, "longitude": 13.5 },
+      { "id": 4, "planId": 1, "sequenceOrder": 4, "latitude": 43.6, "longitude": 13.5 }
+    ]
+  }
+]
+```
+
+---
+
+#### Crea piano di navigazione
+
+```
+POST /api/navigation-plans/navigation-plan
+Authorization: Bearer <token>
+```
+
+Corpo della richiesta:
+```json
+{
+  "vesselCode": "BOAT000001",
+  "startDateTime": "2026-06-10T10:00:00.000Z",
+  "endDateTime": "2026-06-10T18:00:00.000Z",
+  "waypoints": [
+    { "latitude": 43.600, "longitude": 13.500, "sequenceOrder": 1 },
+    { "latitude": 43.650, "longitude": 13.550, "sequenceOrder": 2 },
+    { "latitude": 43.700, "longitude": 13.500, "sequenceOrder": 3 },
+    { "latitude": 43.600, "longitude": 13.500, "sequenceOrder": 4 }
+  ]
+}
+```
+
+Risposta di successo:
+```json
+{
+    "status": "pending",
+    "id": 3,
+    "userId": 1,
+    "vesselCode": "SHIP000001",
+    "startDateTime": "2026-06-10T10:00:00.000Z",
+    "endDateTime": "2026-06-10T18:00:00.000Z",
+    "updatedAt": "2026-06-07T16:27:48.981Z",
+    "createdAt": "2026-06-07T16:27:48.981Z",
+    "rejectionReason": null,
+    "reviewedBy": null,
+    "reviewedAt": null
+}
+```
+
+Risposta in caso di token insufficienti:
+```json
+{
+    "success": false,
+    "error": "Token insufficienti per creare un piano di navigazione. Ricarica il tuo account."
+}
+```
+
+Risposta in caso di validazione fallita:
+```json
+{
+  "success": false,
+  "errors": [
+    {
+      "field": "vesselCode",
+      "message": "vesselCode deve essere lungo esattamente 10 caratteri"
+    },
+    {
+      "field": "startDateTime",
+      "message": "la richiesta deve essere effettuata almeno 48 ore prima dell'inizio del piano di navigazione"
+    }
+  ]
+}
+```
 
 ---
 
