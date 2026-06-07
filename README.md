@@ -1,6 +1,26 @@
 # Drone-Backend-PA
 
-Sistema di gestione dei piani di navigazione per droni marini autonomi. Permette agli utenti di sottomettere richieste di navigazione, agli operatori di valutarle e gestire le aree vietate, e agli amministratori di gestire i crediti degli utenti.
+Il sistema gestisce i piani di navigazione di droni marini autonomi attraverso un flusso di approvazione strutturato. Gli utenti sottomettono richieste di navigazione specificando l'imbarcazione, le date di inizio e fine e la rotta composta da una serie di waypoint geografici. Ogni richiesta viene validata automaticamente dal sistema — che verifica la disponibilità di credito, il rispetto del preavviso minimo di 48 ore e l'assenza di sovrapposizioni con aree vietate — e poi valutata da un operatore che può approvarla o rifiutarla fornendo una motivazione. Il credito degli utenti è gestito tramite token virtuali, con un costo fisso di 5 token per ogni piano sottomesso, e può essere ricaricato dagli amministratori.
+
+## Funzionalità per ruolo
+### Utente
+- **Registrazione e login** — creazione account con email, password e ruolo; autenticazione tramite JWT RS256
+- **Crea un piano di navigazione** — sottomette una richiesta specificando il codice imbarcazione (10 caratteri), data e ora di inizio e fine navigazione, e la rotta come array di waypoint geografici. Il sistema verifica automaticamente che l'utente abbia inserito tutti i dati correttamente e se le validazioni passano, viene creato il nuovo piano di navigazione
+- **Cancella un piano di navigazione** — ritira una richiesta ancora in stato pending; i token non vengono rimborsati
+- **Elenca i propri piani** — visualizza la lista dei piani con filtri opzionali; supporta l'esportazione in formato JSON o PDF
+
+### Operatore
+- **Gestisce le aree vietate** — crea, aggiorna e cancella aree vietate definite come bounding box rettangolare tramite due coppie di coordinate (latitudine e longitudine minima e massima)
+- **Elenca tutte le richieste** — visualizza i piani di navigazione di tutti gli utenti con filtro opzionale per stato
+- **Valuta una richiesta** — approva o rifiuta un piano in stato pending; in caso di rifiuto viene fornita una motivazione
+
+### Amministratore
+- **Ricarica il credito** — aggiorna il saldo token di un utente specificando la sua email e il nuovo valore del credito
+
+### Pubblico (senza autenticazione)
+- **Visualizza le aree vietate** — consulta la lista completa delle aree vietate con le relative coordinate
+
+---
 
 ## Tecnologie principali
 
@@ -114,54 +134,15 @@ docker compose exec postgres psql -U drone_user -d drone_nav
 
 ## Architettura del backend
 
-Il backend segue un'architettura a layer separati con responsabilità ben definite.
+Il sistema è composto da due container Docker orchestrati tramite Docker Compose.
+Container **postgres** — esegue PostgreSQL 16 e si occupa esclusivamente della persistenza dei dati. I dati vengono salvati in un volume Docker che sopravvive al riavvio dei container. Espone la porta 5432 ed è raggiungibile dagli altri container.
+Container **backend express** — esegue l'applicazione Node.js 20 su Debian Bullseye Slim. All'avvio installa le dipendenze, compila il TypeScript e avvia il server Express sulla porta 3000. Dipende dal container postgres, garantendo che il database sia operativo prima che l'applicazione tenti la connessione. 
 
-```
-src/
-├── config/
-│   ├── database.ts         # Singleton Sequelize
-│   └── config.js           # Configurazione sequelize-cli
-├── models/
-│   ├── index.ts            # Associazioni tra i model
-│   ├── User.ts
-│   ├── NavigationPlan.ts
-│   ├── Waypoint.ts
-│   └── ForbiddenArea.ts
-├── dao/
-│   ├── UserDAO.ts
-│   ├── NavigationPlanDAO.ts
-│   ├── WaypointDAO.ts
-│   └── ForbiddenAreaDAO.ts
-├── services/
-│   ├── auth.service.ts
-│   ├── navigationPlan.service.ts
-│   └── forbiddenArea.service.ts
-├── controllers/
-│   ├── auth.controller.ts
-│   ├── navigationPlan.controller.ts
-│   └── forbiddenArea.controller.ts
-├── routes/
-│   ├── auth.routes.ts
-│   ├── plan.routes.ts
-│   ├── area.routes.ts
-│   └── user.routes.ts
-├── middleware/
-│   ├── JWTAuth.ts          # Verifica del token JWT
-│   ├── checkRole.ts        # Verifica del ruolo
-│   ├── zodValidator.ts     # Validazione input con Zod
-│   └── errorHandler.ts     # Gestione centralizzata degli errori
-├── validators/
-│   ├── auth.validator.ts
-│   ├── navigationPlan.validator.ts
-│   └── forbiddenArea.validator.ts
-├── utils/
-│   ├── AppError.ts         # Gerarchia degli errori custom
-│   └── ApiResponse.ts      # Risposte HTTP standardizzate
-├── migrations/
-└── seeders/
-```
+### Componenti principali backend express
 
-### Componenti principali
+Le rotte ricevono delle richieste HTTP e passano il controllo ai controller per la gestione della richiesta. All'interno del controller vengono prelevati i parametri richiesti dall'operazione dal corpo della richiesta HTTP, dai parametri della rotta o dai query string. Una volta ottenuti, il flusso viene delegato al livello di service, incaricato di gestire la logica applicativa. Questo livello si interfaccia con un ulteriore strato rappresentato dagli oggetti DAO (Data Access Object), responsabili dell'esecuzione delle operazioni sul database.
+Prima che la richiesta raggiunga il controller, attraversa una catena di middleware che opera secondo il pattern Chain of Responsibility: il middleware di autenticazione verifica e decodifica il token JWT, il middleware di autorizzazione controlla che il ruolo dell'utente sia abilitato all'operazione richiesta, e il middleware di validazione verifica la correttezza e la completezza dei dati in ingresso tramite schemi Zod. Ogni middleware può interrompere la catena restituendo una risposta di errore oppure passare il controllo al componente successivo.
+Una volta completata l'elaborazione — con successo o con un errore — la risposta viene restituita al controller. In caso di errore, entra in gioco il middleware di gestione centralizzata degli errori, posizionato al termine della catena, e si occupa di formattare e inoltrare la risposta finale al client con il corretto status code HTTP.
 
 **Models** — definiscono la struttura delle tabelle e i tipi TypeScript corrispondenti tramite Sequelize. Le associazioni tra i model (`hasMany`, `belongsTo`, `hasOne`) sono centralizzate in `models/index.ts` per evitare dipendenze circolari.
 
@@ -197,6 +178,8 @@ Aggiorna un piano di navigazione
 
 Aggiorna area vietata
 ![Diagramma-sequenza-aggiorna-area](documentazione/SequenzaUpdateArea.png)
+
+---
 
 ## Pattern architetturali
 
