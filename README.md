@@ -11,9 +11,6 @@ Sistema di gestione dei piani di navigazione per droni marini autonomi. Permette
 - **Docker** e **Docker Compose** — containerizzazione e orchestrazione
 - **JWT con RS256** — autenticazione e autorizzazione
 - **Zod** — validazione degli input
-- **bcryptjs** — hashing delle password
-- **PDFKit** — esportazione dei piani in PDF
-- **http-status-codes** — gestione semantica degli status code HTTP
 
 ---
 
@@ -179,6 +176,27 @@ src/
 **Middleware** — funzioni che si interpongono nella catena di elaborazione della richiesta per autenticazione, autorizzazione, validazione e gestione degli errori.
 
 ---
+
+## Diagramma dei casi d'uso
+
+![casiduso](documentazione/CasiDuso.jpeg)
+
+## Diagrammi di sequenza delle api più complesse
+
+Ricarica Token di uno user
+![Diagramma-sequenza-ricarica-token](documentazione/SequenzaToken.png)
+
+Crea un piano di navigazione
+![Diagramma-sequenza-crea-piano](documentazione/SequenzaCreaPiano.png)
+
+Visualizza i piani di navigazione
+![Diagramma-sequenza-visualizza-piani](documentazione/SequenzaListaPiani.png)
+
+Aggiorna un piano di navigazione
+![Diagramma-sequenza-aggionra-piano](documentazione/SequenzaReviewPiano.png)
+
+Aggiorna area vietata
+![Diagramma-sequenza-aggiorna-area](documentazione/SequenzaUpdateArea.png)
 
 ## Pattern architetturali
 
