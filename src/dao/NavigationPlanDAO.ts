@@ -83,7 +83,6 @@ class NavigationPlanDAO {
             if (filters.dateTo) dateFilter[Op.lte] = filters.dateTo;
             where.startDatetime = dateFilter;
         }
-        console.log(where);
 
         return NavigationPlan.findAll({
             where,
