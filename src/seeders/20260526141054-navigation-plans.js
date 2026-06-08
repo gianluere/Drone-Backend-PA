@@ -29,10 +29,10 @@ module.exports = {
         vessel_code: 'SHIP000002',
         start_datetime: new Date(Date.now() + 1000 * 60 * 60 * 48), // +48h esatte
         end_datetime:   new Date(Date.now() + 1000 * 60 * 60 * 60), // +60h
-        status: 'accepted',
+        status: 'pending',
         rejection_reason: null,
         reviewed_by: null,
-        reviewed_at: new Date(),
+        reviewed_at: null,
         created_at: new Date(),
         updated_at: new Date(),
       },

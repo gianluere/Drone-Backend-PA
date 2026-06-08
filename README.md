@@ -78,7 +78,7 @@ Questo comando avvia due servizi:
 Le migration creano lo schema del database nell'ordine corretto rispettando i vincoli di foreign key:
 
 ```bash
-docker compose exec backend npx sequelize-cli db:migrate
+docker exec drone_backend npx sequelize-cli db:migrate
 ```
 
 ### 5. Esegui i seeder
@@ -86,7 +86,7 @@ docker compose exec backend npx sequelize-cli db:migrate
 I seeder popolano il database con i dati iniziali (utenti di esempio con i rispettivi ruoli e token, piani di navigazione di esempio, aree vietate):
 
 ```bash
-docker compose exec backend npx sequelize-cli db:seed:all
+docker exec drone_backend npx sequelize-cli db:seed:all
 ```
 
 ### 6. Verifica il funzionamento
@@ -110,6 +110,12 @@ curl http://localhost:3000/api/health
 ```bash
 # visualizza i log in tempo reale
 docker compose logs -f backend
+
+# I seguenti comandi devono essere fatti dalla cartella dove è presente il docker-compose.yml
+# in altri casi sostituire
+# docker compose exec backend
+# con
+# docker exec drone_backend
 
 # reset completo del database
 docker compose exec backend npx sequelize-cli db:seed:undo:all
@@ -434,7 +440,15 @@ Ogni entità del dominio ha una classe DAO dedicata che incapsula tutte le opera
 
 La separazione tra DAO e Service è motivata dal principio di singola responsabilità: i DAO non sanno nulla delle regole di business, i service non sanno nulla di come i dati vengono recuperati. Questo rende possibile modificare le query senza toccare la logica applicativa e viceversa, e semplifica i test unitari permettendo di sostituire i DAO con mock nelle classi di test.
 
+---
+
 ## Testing
+
+### Postman
+
+Per effettuare il corretto funzionamento delle API create è stato utilizzato Postman. La collection con tutte le request utilizzata per effettuare i test si trova nella directory principale del repository e basta semplicemente importara il file .json su postman. Creare inoltre un file .env con le variabili necessatie per per il corretto funzionamento.
+
+### Jest
 
 I test sono stati implementati utilizzando Jest come framework di testing, con ts-jest per la compilazione TypeScript. I test si concentrano sui middleware di autenticazione e autorizzazione, che rappresentano i componenti critici per la sicurezza del sistema.\
 \
@@ -445,7 +459,7 @@ Per ogni test vengono creati oggetti fittizi di Request, Response e NextFunction
 **mockRes** — simula la risposta HTTP con i metodi status() e json() tracciati da Jest, che permettono di verificare con quali argomenti sono stati chiamati\
 **mockNext** — simula la funzione next() di Express, tracciata da Jest per verificare se il middleware ha passato il controllo al componente successivo
 
-### Test di checkAndVerifyJWT
+#### Test di checkAndVerifyJWT
 Il middleware checkAndVerifyJWT è responsabile della verifica del token JWT in ogni richiesta autenticata. La libreria jsonwebtoken viene sostituita interamente con un mock tramite jest.mock('jsonwebtoken'), permettendo di simulare token validi, scaduti o malformati senza dover generare chiavi RSA reali.
 I casi testati sono:
 
@@ -454,7 +468,7 @@ I casi testati sono:
 - **Token non valido o scaduto** — simula un'eccezione lanciata da jwt.verify e verifica che il middleware risponda con 401
 - **Token valido** — simula un payload decodificato restituito da jwt.verify e verifica che il middleware imposti correttamente req.user e chiami next()
 
-### Test di checkRole
+#### Test di checkRole
 Il middleware checkRole è una higher-order function che riceve i ruoli autorizzati e restituisce un middleware. Viene testato verificando che la combinazione di ruolo dell'utente autenticato e ruoli richiesti dalla rotta produca il comportamento corretto.
 I casi testati sono:
 

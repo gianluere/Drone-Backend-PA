@@ -33,20 +33,20 @@ export interface AuthenticatedRequest extends Request {
 export const checkAndVerifyJWT = (req: Request, res: Response, next: NextFunction): void => {
   const rawToken = req.headers.authorization;
 
-  // 1. header presente?
+  // controllo header
   if (!rawToken) {
     res.status(StatusCodes.UNAUTHORIZED).json({ error: 'Auth token non disponibile nell\'header' });
     return;
   }
 
-  // 2. formato corretto?
+  // controllo del formato
   const splittedRawToken = rawToken.split(' ');
   if (splittedRawToken.length !== 2 || splittedRawToken[0] !== 'Bearer') {
     res.status(StatusCodes.UNAUTHORIZED).json({ error: 'L\'auth token non è nel formato corretto' });
     return;
   }
 
-  // 3. verifica il token
+  // verifica del token
   try {
     const decoded = jwt.verify(
       splittedRawToken[1],

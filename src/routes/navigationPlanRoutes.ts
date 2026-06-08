@@ -45,15 +45,6 @@ router.post('/navigation-plan', protect(UserRole.USER), zodValidate(createNaviga
  */
 router.delete('/:id', protect(UserRole.USER), navigationPlanController.deleteNavigationPlan);
 
-
-/**
- * @route GET /api/plans/:status
- * Questa rotta restituisce la lista dei piani di navigazione filtrati per stato.
- * Richiede autenticazione JWT e verifica che l'utente abbia il ruolo di 'operator'.
- * Chiama il controller per ottenere la lista dei piani di navigazione filtrati.
- */
-//router.get('/', checkAndVerifyJWT, checkRole('operator'), navigationPlanController.listNavigationPlans);
-
 /**
  * @route PATCH /api/plans/:id/review
  * Questa rotta gestisce la revisione di un piano di navigazione esistente.
